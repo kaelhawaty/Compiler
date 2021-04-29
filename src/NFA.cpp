@@ -29,6 +29,9 @@ NFA::NFA(std::shared_ptr<Node> start, std::shared_ptr<Node> end) : start(std::mo
 
 }
 
+/*
+ * Copy constructor in O(n) complexity by traversing the NFA and copying each node/state in it.
+ */
 NFA::NFA(const NFA &cpy) {
     // Check if we have allocated this node or not.
     std::unordered_map<int, std::shared_ptr<Node>> allocated;
@@ -84,6 +87,10 @@ NFA &NFA::operator=(NFA &&rhs) noexcept {
     return *this;
 }
 
+/*
+ * Compute the ε-closure of the given set by using a bfs that traverses the
+ * edges connected to the current set using ε edges/transitions.
+ */
 NFA::Set E_closure(const NFA::Set &states) {
     NFA::Set closure = states;
     std::queue<const NFA::Node *> q;
@@ -106,6 +113,11 @@ NFA::Set E_closure(const NFA::Set &states) {
     return closure;
 }
 
+/*
+ * Moves each state in the set using the c transition provided in the argument.
+ * Note that this function doesn't call ε-closure and if needed, follow it by a call to
+ * ε-closure.
+ */
 NFA::Set Move(const NFA::Set &states, const char c) {
     NFA::Set new_set;
     for (auto &state : states) {
@@ -118,12 +130,3 @@ NFA::Set Move(const NFA::Set &states, const char c) {
     }
     return new_set;
 }
-
-
-
-
-
-
-
-
-
