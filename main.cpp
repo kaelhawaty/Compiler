@@ -1,6 +1,8 @@
 #include <iostream>
-
+#include "src/NFAGenerator.h"
 int main()
 {
-    std::cout << "Hello World!";
+    string inputPath = "C:\\Users\\ziad\\CLionProjects\\Compiler\\input";
+    NFAGenerator a = NFAGenerator(inputPath);
+    a.getNFA();
 }
