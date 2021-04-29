@@ -49,6 +49,10 @@ NFA_Builder &NFA_Builder::Kleene_closure() {
     return *this;
 }
 
+/*
+ * Note after calling this function, the builder object becomes unusable.
+ * Since the NFA is moved out of the builder class.
+ */
 NFA NFA_Builder::build() {
     return std::move(nfa);
 }

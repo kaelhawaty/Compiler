@@ -83,7 +83,7 @@ namespace NFA_test {
         EXPECT_TRUE(areEqual(temp, cpy));
     }
 
-    TEST(NFA_TEST, Concatenate) {
+    TEST(NFA_test, Concatenate) {
         NFA a{'a'};
         NFA b{'b'};
 
@@ -104,7 +104,7 @@ namespace NFA_test {
         EXPECT_TRUE(areEqual(temp, res));
     }
 
-    TEST(NFA_TEST, Or) {
+    TEST(NFA_test, Or) {
         NFA a{'a'};
         NFA b{'b'};
         NFA_Builder builder{a};
@@ -132,7 +132,7 @@ namespace NFA_test {
         EXPECT_TRUE(areEqual(temp, res));
     }
 
-    TEST(NFA_TEST, Positive_closure) {
+    TEST(NFA_test, Positive_closure) {
         NFA a{'a'};
         NFA_Builder builder{a};
         builder.Positive_closure();
@@ -157,7 +157,7 @@ namespace NFA_test {
         EXPECT_TRUE(areEqual(temp, res));
     }
 
-    TEST(NFA_TEST, Kleene_closure) {
+    TEST(NFA_test, Kleene_closure) {
         NFA a{'a'};
         NFA_Builder builder{a};
         builder.Kleene_closure();
@@ -198,7 +198,7 @@ namespace NFA_test {
         return false;
     }
 
-    TEST(NFA_TEST, MatchesRegExp) {
+    TEST(NFA_test, MatchesRegExp) {
         // aa (a | b) a*
         NFA_Builder builder{NFA('a')};
         builder.Concatenate(NFA('a'));
