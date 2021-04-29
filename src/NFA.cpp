@@ -4,42 +4,29 @@
 
 #include "NFA.h"
 
-class NFA::Node {
-
-public:
-    using Transitions = std::unordered_map<char, std::vector<std::shared_ptr<Node>>>;
-    static int UNIQUE_ID;
-
-    Node() : id(UNIQUE_ID++) {}
-
-    int get_id() const {
-        return id;
-    }
-
-    friend class NFA;
-
-    friend NFA Concatenate(NFA lhs, NFA rhs);
-
-    friend NFA Or(NFA lhs, NFA rhs);
-
-    friend NFA Kleene_closure(NFA nfa);
-
-    friend NFA Positive_closure(NFA nfa);
-
-    friend NFA::Set E_closure(const NFA::Set &states);
-
-    friend NFA::Set Move(const NFA::Set &states, const char c);
-
-private:
-    const int id;
-    Transitions trans;
-};
 
 int NFA::Node::UNIQUE_ID = 0;
 
+NFA::Node::Node() : id(UNIQUE_ID++) {}
+
+int NFA::Node::get_id() const {
+    return id;
+}
+
+void NFA::Node::addTransition(const char c, std::shared_ptr<Node> ptr) {
+    this->trans[c].push_back(std::move(ptr));
+}
+
+NFA::NFA() : start(std::make_shared<Node>()), end(std::make_shared<Node>()) {
+    start->addTransition(EPSILON, end);
+}
 
 NFA::NFA(const char c) : start(std::make_shared<Node>()), end(std::make_shared<Node>()) {
-    start->trans[c].push_back(end);
+    start->addTransition(c, end);
+}
+
+NFA::NFA(std::shared_ptr<Node> start, std::shared_ptr<Node> end) : start(std::move(start)), end(std::move(end)) {
+
 }
 
 NFA::NFA(const NFA &cpy) {
@@ -69,7 +56,7 @@ NFA::NFA(const NFA &cpy) {
 
                 cur_new->trans[c].push_back(allocated[node_ptr->id]);
                 if (!constructed.count(node_ptr->id)) {
-                    constructed.insert(cur_old->id);
+                    constructed.insert(node_ptr->id);
                     q.push(node_ptr.get());
                 }
             }
@@ -97,43 +84,6 @@ NFA &NFA::operator=(NFA &&rhs) noexcept {
     return *this;
 }
 
-NFA Concatenate(NFA lhs, NFA rhs) {
-    lhs.end->trans[EPSILON].push_back(std::move(rhs.start));
-    lhs.end = std::move(rhs.end);
-    return lhs;
-}
-
-NFA Or(NFA lhs, NFA rhs) {
-    auto new_start{std::make_shared<NFA::Node>()};
-    auto new_end{std::make_shared<NFA::Node>()};
-
-    new_start->trans[EPSILON].push_back(std::move(lhs.start));
-    new_start->trans[EPSILON].push_back(std::move(rhs.start));
-    lhs.end->trans[EPSILON].push_back(new_end);
-    rhs.end->trans[EPSILON].push_back(new_end);
-    lhs.start = std::move(new_start);
-    lhs.end = std::move(new_end);
-    return lhs;
-}
-
-NFA Kleene_closure(NFA nfa) {
-    NFA new_nfa{Positive_closure(nfa)};
-    new_nfa.start->trans[EPSILON].push_back(new_nfa.end);
-    return nfa;
-}
-
-NFA Positive_closure(NFA nfa) {
-    auto new_start{std::make_shared<NFA::Node>()};
-    auto new_end{std::make_shared<NFA::Node>()};
-
-    nfa.end->trans[EPSILON].push_back(std::move(nfa.start));
-    new_start->trans[EPSILON].push_back(std::move(nfa.start));
-    nfa.end->trans[EPSILON].push_back(new_end);
-    nfa.start = std::move(new_start);
-    nfa.end = std::move(new_end);
-    return nfa;
-}
-
 NFA::Set E_closure(const NFA::Set &states) {
     NFA::Set closure = states;
     std::queue<const NFA::Node *> q;
@@ -143,6 +93,9 @@ NFA::Set E_closure(const NFA::Set &states) {
     while (!q.empty()) {
         auto front = q.front();
         q.pop();
+        if (!front->trans.count(EPSILON)) {
+            continue;
+        }
         for (const auto &child : front->trans.at(EPSILON)) {
             if (!closure.count(child.get())) {
                 closure.insert(child.get());
@@ -156,12 +109,17 @@ NFA::Set E_closure(const NFA::Set &states) {
 NFA::Set Move(const NFA::Set &states, const char c) {
     NFA::Set new_set;
     for (auto &state : states) {
+        if (!state->trans.count(c)) {
+            continue;
+        }
         for (const auto &child : state->trans.at(c)) {
             new_set.insert(child.get());
         }
     }
-    return E_closure(new_set);
+    return new_set;
 }
+
+
 
 
 
