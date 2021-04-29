@@ -15,34 +15,35 @@
 const char EPSILON = 0;
 
 class NFA {
+
 public:
-    NFA(const char c);
+    explicit NFA(char c);
 
     NFA(const NFA &cpy);
 
     NFA &operator=(const NFA &cpy);
 
-    NFA(NFA &&rhs);
+    NFA(NFA &&rhs) noexcept;
 
-    NFA &operator=(NFA &&rhs);
+    NFA &operator=(NFA &&rhs) noexcept;
 
     class Node;
 
     using Set = std::set<const NFA::Node *>;
-private:
     std::shared_ptr<Node> start, end;
+
 };
 
-NFA Concatenate(const NFA &lhs, const NFA &rhs);
+NFA Concatenate(NFA lhs, NFA rhs);
 
-NFA Or(const NFA &lhs, const NFA &rhs);
+NFA Or(NFA lhs, NFA rhs);
 
-NFA Kleene_closure(const NFA &nfa);
+NFA Kleene_closure(NFA nfa);
 
-NFA Positive_closure(const NFA &nfa);
+NFA Positive_closure(NFA nfa);
 
-const NFA::Set E_closure(const NFA::Set &states);
+NFA::Set E_closure(const NFA::Set &states);
 
-const NFA::Set Move(const NFA::Set &states, const char c);
+NFA::Set Move(const NFA::Set &states, char c);
 
 #endif //COMPILER_NFA_H
