@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(Tests)
 
-add_executable(Compiler main.cpp)
+add_executable(Compiler main.cpp NFA.cpp NFA.h)
