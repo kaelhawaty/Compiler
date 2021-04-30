@@ -1,70 +1,57 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
-#include "NFAGenerator.h"
+#include <climits>
+#include "InputParser.h"
+#include "Utils/ParserUtils.h"
 
 #define DEBUG1 1
 
-NFAGenerator::NFAGenerator(string inputFilePath): componentParser(this->regularDefinitions){
-    this->inputFilePath = std::move(inputFilePath);
-}
-
-vector<RegularExpression> NFAGenerator::getNFAs() {
-    this->readInputFile();
+InputParser::InputParser(const std::string& inputFilePath){
+    std::vector<std::string> inputFileLines = this->readInputFile(inputFilePath);
     this->addBasicRegularDefinitions();
-    for(string& line : this->inputFileLines)
+    for(std::string& line : inputFileLines)
         parseLine(line);
-    return getExpressions();
 }
 
-vector<RegularExpression> NFAGenerator::getExpressions() {
-    return this->regularExpressions;
+std::vector<std::pair<std::string, std::vector<component>>> InputParser::getRegularDefinitionsComponents() {
+    return this->regularDefinitionsComponents;
 }
 
-void NFAGenerator::readInputFile() {
-    fstream newfile;
-    newfile.open(this->inputFilePath,ios::in);
+std::vector<std::string> InputParser::getRegularExpressions() {
+    return this->regularExpressionsNames;
+}
+
+std::vector<std::string> InputParser::readInputFile(const std::string& inputFilePath) {
+    std::fstream newfile;
+    newfile.open(inputFilePath,std::ios::in);
+    std::vector<std::string> inputFileLines;
     if (newfile.is_open()){
-        string tp;
+        std::string tp;
         while(getline(newfile, tp)){
-            this->inputFileLines.push_back(tp);
+            inputFileLines.push_back(tp);
         }
         newfile.close();
     }
+    return inputFileLines;
 }
 
-void NFAGenerator::addBasicRegularDefinitions() {
-    for(char i='a' ; i<= 'z' ;i++)
-        addSingleChar(i);
+void InputParser::addBasicRegularDefinitions() {
+    for(char i=1 ; i< CHAR_MAX;i++)
+        std::cout << i << std::endl,addSingleChar(i);
 
-    for(char i='A' ; i<= 'Z' ;i++)
-        addSingleChar(i);
-
-    for(char i='0' ; i<= '9' ;i++)
-        addSingleChar(i);
-    //this->regularDefinitions[string(1, EPSILON)] = this->componentParser.addCharNFA(EPSILON); //{"Lambda"}
+    // EPSILON = 0 (0 is the Regular Definition name and component for EPSILON )
     addSingleChar(EPSILON);
 }
 
-void NFAGenerator::addSingleChar(char c) {
-    string let(1,c);
-    this->regularDefinitions[let] = this->componentParser.addCharNFA(c); //{let}
+void InputParser::addSingleChar(char c) {
+    std::string let(1,c);
+    std::vector<component> letComponents(1,{RED_DEF,let});
+    this->regularDefinitionsComponents.emplace_back(let,letComponents);
 }
-// this function is just for debugging ignore it
-string getText(component_type c) {
-    switch (c){
-        case OPEN_BRACKETS: return "OPEN_BRACKETS";
-        case CLOSE_BRACKETS: return "CLOSE_BRACKETS";
-        case KLEENE_CLOSURE: return "KLEENE_CLOSURE";
-        case POS_CLOSURE: return "POS_CLOSURE";
-        case OR: return "OR";
-        case CONCAT: return "CONCAT";
-        case TO: return "TO";
-        default: return "RED_DEF";
-    }
-}
-void NFAGenerator::parseLine(string s) {
-    if(DEBUG1)cout << s << endl;
+
+void InputParser::parseLine(std::string s) {
+    if(DEBUG1)std::cout << s << std::endl;
     s = trim(s);
     if(s[0] == '['){
         addPunctuations(s);
@@ -73,27 +60,27 @@ void NFAGenerator::parseLine(string s) {
     }else{
         int ind = 0;
         while (!(s[ind]=='=' || s[ind]==':')) ind++;
-        string name = s.substr(0,ind);
+        std::string name = s.substr(0,ind);
         name = trim(name);
-        string expression = s.substr(ind+1);
+        std::string expression = s.substr(ind+1);
         expression = trim(expression);
         addRegularDefinition(name,expression);
         if (s[ind] == ':') {
-            this->regularExpressions.emplace_back(expression, name, 0, this->regularDefinitions[name]);
+            this->regularExpressionsNames.emplace_back(name);
         }
     }
 }
 
-void NFAGenerator::addRegularDefinition(const string& name, string expression) {
-    vector<component> components = getComponents(std::move(expression));
-    regularDefinitions[name] = this->componentParser.buildParseTree(components); //{name}
+void InputParser::addRegularDefinition(const std::string& name, std::string expression) {
+    std::vector<component> components = getComponents(std::move(expression));
+    this->regularDefinitionsComponents.emplace_back(name,components);
 
     if(DEBUG1)for(component& c : components)
-        cout << getText(c.type) << "   " << (c.type==RED_DEF ? "("+c.regularDefinition+")" : "") << "  ";
-    if(DEBUG1)cout << endl << endl;
+            std::cout << getText(c.type) << "   " << (c.type==RED_DEF ? "("+c.regularDefinition+")" : "") << "  ";
+    if(DEBUG1)std::cout << std::endl << std::endl;
 }
 
-void NFAGenerator::addPunctuations(string s) {
+void InputParser::addPunctuations(std::string s) {
 
     for(int i=1 ; i < s.size()-1 ; i++){
         if(s[i] == ' ') continue;
@@ -105,35 +92,37 @@ void NFAGenerator::addPunctuations(string s) {
             punctuation =s[i];
         }
         addSingleChar(punctuation);
+        this->regularExpressionsNames.emplace_back(std::string(1,punctuation));
     }
 
 }
 
-void NFAGenerator::addKeywords(string s) {
-    regex rgx("\\w+");
+void InputParser::addKeywords(std::string s) {
+    std::regex rgx("\\w+");
 
-    for( sregex_iterator it(s.begin(), s.end(), rgx), it_end; it != it_end; ++it ){
-        string keyword = (*it)[0];
-        string keywordWithSpaces;
+    for( std::sregex_iterator it(s.begin(), s.end(), rgx), it_end; it != it_end; ++it ){
+        std::string keyword = (*it)[0];
+        std::string keywordWithSpaces;
         for(char c : keyword){
             keywordWithSpaces.push_back(c);
             keywordWithSpaces.push_back(' ');
         }
         addRegularDefinition(keyword,trim(keywordWithSpaces));
+        this->regularExpressionsNames.emplace_back(keyword);
     }
 
 }
 
-vector<component> NFAGenerator::getComponents(string s) {
-    vector<component> components;
+std::vector<component> InputParser::getComponents(std::string s) {
+    std::vector<component> components;
     for(int i=0 ; i< s.length() ;i++){
         component_type type = getOperationType(s[i]);
         if(type == RED_DEF){
             if( i+1 < s.length() && s[i] == '\\' && s[i+1] == 'L'){
-                components.push_back({type,"Lambda"}); //this->regularDefinitions["Lambda"]
+                components.push_back({type,std::string(1,0)}); //this->regularDefinitions["Lambda"]
                 i++;
             }else{
-                string name;
+                std::string name;
                 int j = i;
                 while (j < s.length() && getOperationType(s[j]) == RED_DEF){
                     if(s[j] == '\\'){
@@ -156,9 +145,9 @@ vector<component> NFAGenerator::getComponents(string s) {
 }
 
 //removes unnecessary CONCAT operations
-vector<component> NFAGenerator::filterComponents(vector<component> &components) {
+std::vector<component> InputParser::filterComponents(std::vector<component> &components) {
     int size = components.size();
-    vector<bool> exist(size, true);
+    std::vector<bool> exist(size, true);
     for(int i=0 ; i< size ; i++){
         component_type type = components[i].type;
         if( type == KLEENE_CLOSURE || type == POS_CLOSURE || type == CLOSE_BRACKETS || type == OR || type == TO){
@@ -176,7 +165,7 @@ vector<component> NFAGenerator::filterComponents(vector<component> &components) 
             }
         }
     }
-    vector<component> filteredComponents;
+    std::vector<component> filteredComponents;
     for(int i=0 ; i< size ; i++)
         if(exist[i])
             filteredComponents.push_back(components[i]);
@@ -184,7 +173,7 @@ vector<component> NFAGenerator::filterComponents(vector<component> &components) 
     return filteredComponents;
 }
 
-component_type NFAGenerator::getOperationType(char c) {
+component_type InputParser::getOperationType(char c) {
     switch (c){
         case '(': return OPEN_BRACKETS;
         case ')': return CLOSE_BRACKETS;
@@ -196,12 +185,3 @@ component_type NFAGenerator::getOperationType(char c) {
         default: return RED_DEF;
     }
 }
-
-string NFAGenerator::trim(const string &s) {
-    int start = 0;
-    while (s[start] == ' ') start++;
-    int end = s.size()-1;
-    while (s[end] == ' ') end--;
-    return s.substr(start,end-start+1);
-}
-

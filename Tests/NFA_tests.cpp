@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "../src/NFA.h"
-#include "../src/NFA_Builder.h"
+#include "../src/NFA/NFA.h"
+#include "../src/NFA/NFA_Builder.h"
 
 namespace NFA_test {
 

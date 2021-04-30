@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "string"
-#include "NFA.h"
+#include "../NFA/NFA.h"
 
 class RegularExpression {
 private:

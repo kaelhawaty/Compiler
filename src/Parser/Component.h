@@ -5,7 +5,7 @@
 #ifndef COMPILER_COMPONENT_H
 #define COMPILER_COMPONENT_H
 
-#include "string.h"
+#include "string"
 
 enum component_type {
     REG_EXP,

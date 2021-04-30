@@ -4,7 +4,7 @@
 
 #include <stack>
 #include "ComponentParser.h"
-#include "NFA_Builder.h"
+#include "../NFA/NFA_Builder.h"
 
 using namespace std;
 

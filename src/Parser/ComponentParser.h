@@ -6,7 +6,7 @@
 #define COMPILER_COMPONENTPARSER_H
 #include <string>
 #include "Component.h"
-#include "NFA_Builder.h"
+#include "../NFA/NFA_Builder.h"
 
 class ComponentParser {
 private:

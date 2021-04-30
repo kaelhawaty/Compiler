@@ -9,5 +9,5 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 # Now simply link against gtest or gtest_main as needed. Eg
-add_executable(Tests NFA_tests.cpp ../src/NFA.cpp ../src/NFA.h ../src/NFA_Builder.cpp ../src/NFA_Builder.h)
+add_executable(Tests NFA_tests.cpp ../src/NFA/NFA.cpp ../src/NFA/NFA.h ../src/NFA/NFA_Builder.cpp ../src/NFA/NFA_Builder.h)
 target_link_libraries(Tests gtest_main)
