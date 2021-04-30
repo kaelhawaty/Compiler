@@ -4,6 +4,7 @@
 
 #include <stack>
 #include "ComponentParser.h"
+#include "NFA_Builder.h"
 
 template<typename t>
 t poll(std::stack<t>& st) {
@@ -20,43 +21,45 @@ bool hasPrecedence(component_type t1, component_type t2) {
 }
 
 NFA ComponentParser::buildParseTree(std::vector<component>& components) {
-    std::stack<NFA> NFAs;
+
+    std::stack<NFA_Builder> NFABuilders;
     std::stack<component_type> operations;
+
     for (int i = 0; i < components.size(); i++) {
         component comp = components[i];
         if (i + 1 < components.size() && components[i + 1].type == TO) {
             if (i + 2 >= components.size()) {
                 exit(-1);
             }
-            NFAs.push(applyToOperation(components[i], components[i + 2]));
+            NFABuilders.push(applyToOperation(components[i], components[i + 2]));
             i += 2;
         }
         else if (comp.type == POS_CLOSURE || comp.type == KLEENE_CLOSURE) {
-            NFAs.push(addClosure(comp, poll(NFAs)));
+            NFABuilders.push(addClosure(comp, poll(NFABuilders)));
         }
         else if (comp.type == OPEN_BRACKETS) {
-            NFAs.push(addExpressionInBrackets(components, &i));
+            NFABuilders.push(addExpressionInBrackets(components, &i));
         }
         else if (comp.type == REG_EXP || comp.type == RED_DEF) {
-            NFAs.push(regToNFA[comp.regularDefinition]);
+            NFABuilders.push(NFA_Builder(regToNFA[comp.regularDefinition]));
         }
         else if (comp.type == CONCAT || comp.type == OR) {
             while (!operations.empty() && hasPrecedence(operations.top(), comp.type)) {
-                NFAs.push(applyBinaryOperation(poll(operations), poll(NFAs), poll(NFAs)));
+                NFABuilders.push(applyBinaryOperation(poll(operations), poll(NFABuilders), poll(NFABuilders)));
             }
             operations.push(comp.type);
         }
     }
 
     while (!operations.empty()) {
-        NFAs.push(applyBinaryOperation(poll(operations), poll(NFAs), poll(NFAs)));
+        NFABuilders.push(applyBinaryOperation(poll(operations), poll(NFABuilders), poll(NFABuilders)));
     }
 
-    return NFAs.top();
+    return NFABuilders.top().build();
 }
 
 
-NFA ComponentParser::addExpressionInBrackets(vector<component>& components, int *index) {
+NFA_Builder ComponentParser::addExpressionInBrackets(vector<component>& components, int *index) {
     std::vector<component> temp;
     int bracketsCount = 1;
     int j;
@@ -79,35 +82,33 @@ NFA ComponentParser::addExpressionInBrackets(vector<component>& components, int 
         exit(-1);
     }
     *index = j;
-    return buildParseTree(temp);
+    return NFA_Builder(buildParseTree(temp));
 }
 
-NFA ComponentParser::addClosure(component& comp, NFA&& nfa) {
-    return comp.type == POS_CLOSURE ? Positive_closure(nfa) : Kleene_closure(nfa);
+NFA_Builder ComponentParser::addClosure(component& comp, NFA_Builder&& nfaBuilder) {
+    return comp.type == POS_CLOSURE ? nfaBuilder.Positive_closure() : nfaBuilder.Kleene_closure();
 }
 
-NFA ComponentParser::applyBinaryOperation(component_type type, NFA&& firstNFA, NFA&& secondNFA) {
+NFA_Builder ComponentParser::applyBinaryOperation(component_type type, NFA_Builder&& firstNFABuilder, NFA_Builder&& secondNFABuilder) {
     switch (type) {
-        case TO:
-        case CONCAT: return Concatenate(firstNFA, secondNFA);
-        case OR: return Or(firstNFA, secondNFA);
+        case CONCAT: return firstNFABuilder.Concatenate(secondNFABuilder.build());
+        case OR: return firstNFABuilder.Or(secondNFABuilder.build());
         default: exit(-1);
     }
 }
 
-NFA ComponentParser::addCharNFA(RegularDefinition& regDefinition) {
-    this->regToNFA[regDefinition] = NFA(regDefinition.name[0]);
+NFA ComponentParser::addCharNFA(char regDefinitionChar) {
+    return NFA(regDefinitionChar);
 }
 
-NFA ComponentParser::applyToOperation(component& c1, component& c2) {
-    char first = c1.regularDefinition.name[0];
-    char second = c2.regularDefinition.name[1];
+NFA_Builder ComponentParser::applyToOperation(component& c1, component& c2) {
+    char first = c1.regularDefinition[0];
+    char second = c2.regularDefinition[0];
     if (second - first < 0) exit(-1);
-    NFA nfa(first);
+    NFA_Builder nfa_builder((NFA(first)));
     while (++first >= second) {
-        NFA next(first);
-        nfa = Or(nfa, next);
+        nfa_builder.Or(NFA (first));
     }
-    return nfa;
+    return nfa_builder;
 }
 

@@ -6,22 +6,22 @@
 #define COMPILER_COMPONENTPARSER_H
 
 
-#include "RegularDefinition.h"
 #include "NFAGenerator.h"
-
+#include "NFA_Builder.h"
 
 class ComponentParser {
+private:
     unordered_map<string, NFA> regToNFA;
+    NFA_Builder addExpressionInBrackets(std::vector<component>&, int* index);
+
+    static NFA_Builder applyToOperation(component&, component&);
+    static NFA_Builder addClosure(component&, NFA_Builder&&);
+    static NFA_Builder applyBinaryOperation(component_type, NFA_Builder&&, NFA_Builder&&);
+
 public:
-    ComponentParser(){}
+    ComponentParser(unordered_map<string,NFA>& regularDefinitions): regToNfa(RegularDefinition) {}
     NFA buildParseTree(std::vector<component>&);
-    NFA addExpressionInBrackets(std::vector<component>&, int* index);
-    NFA addCharNFA(RegularDefinition&);
-
-    static NFA applyToOperation(component&, component&);
-    static NFA addClosure(component&, NFA&&);
-    static NFA applyBinaryOperation(component_type, NFA&&, NFA&&);
-
+    NFA addCharNFA(char);
 };
 
 

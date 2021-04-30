@@ -8,6 +8,8 @@
 #include <vector>
 #include <unordered_map>
 #include "NFA.h"
+#include "ComponentParser.h"
+#include "RegularExpression.h"
 
 
 using namespace std;
@@ -31,12 +33,15 @@ struct component {
 class NFAGenerator {
 public:
     NFAGenerator(string inputFilePath);
-    NFA getNFA();
+    vector<RegularExpression> getNFAs();
+    vector<RegularExpression> getExpressions();
 
 private:
     string inputFilePath;
+    ComponentParser componentParser;
     unordered_map<string,NFA> regularDefinitions;
     vector<string> inputFileLines;
+    vector<RegularExpression> regularExpressions;
 
     void readInputFile();
     void parseLine(string s);
@@ -47,7 +52,7 @@ private:
     string trim(const string &s);
     void addKeywords(string s);
     void addPunctuations(string s);
-    void addRegularDefinition(string name,string expression);
+    void addRegularDefinition(const string& name,string expression);
     void addSingleChar(char c);
 };
 

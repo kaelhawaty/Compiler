@@ -5,16 +5,20 @@
 
 #define DEBUG1 1
 
-NFAGenerator::NFAGenerator(string inputFilePath){
-    this->inputFilePath = inputFilePath;
+NFAGenerator::NFAGenerator(string inputFilePath): componentParser(this->regularDefinitions){
+    this->inputFilePath = std::move(inputFilePath);
 }
 
-NFA NFAGenerator::getNFA() {
+vector<RegularExpression> NFAGenerator::getNFAs() {
     this->readInputFile();
     this->addBasicRegularDefinitions();
     for(string& line : this->inputFileLines)
         parseLine(line);
-    return NFA();
+    return getExpressions();
+}
+
+vector<RegularExpression> NFAGenerator::getExpressions() {
+    return this->regularExpressions;
 }
 
 void NFAGenerator::readInputFile() {
@@ -38,14 +42,13 @@ void NFAGenerator::addBasicRegularDefinitions() {
 
     for(char i='0' ; i<= '9' ;i++)
         addSingleChar(i);
-    //TODO : Build required NFA
-    this->regularDefinitions["Lambda"] = NFA(); //{"Lambda"}
+    //this->regularDefinitions[string(1, EPSILON)] = this->componentParser.addCharNFA(EPSILON); //{"Lambda"}
+    addSingleChar(EPSILON);
 }
 
 void NFAGenerator::addSingleChar(char c) {
     string let(1,c);
-    //TODO : Build required NFA
-    this->regularDefinitions[let] = NFA(); //{let}
+    this->regularDefinitions[let] = this->componentParser.addCharNFA(c); //{let}
 }
 // this function is just for debugging ignore it
 string getText(component_type c) {
@@ -75,13 +78,15 @@ void NFAGenerator::parseLine(string s) {
         string expression = s.substr(ind+1);
         expression = trim(expression);
         addRegularDefinition(name,expression);
+        if (s[ind] == ':') {
+            this->regularExpressions.emplace_back(expression, name, 0, this->regularDefinitions[name]);
+        }
     }
 }
 
-void NFAGenerator::addRegularDefinition(string name, string expression) {
-    vector<component> components = getComponents(expression);
-    //TODO : use components to build tree for expression (Build required NFA)
-    regularDefinitions[name] = NFA(); //{name}
+void NFAGenerator::addRegularDefinition(const string& name, string expression) {
+    vector<component> components = getComponents(std::move(expression));
+    regularDefinitions[name] = this->componentParser.buildParseTree(components); //{name}
 
     if(DEBUG1)for(component& c : components)
         cout << getText(c.type) << "   " << (c.type==RED_DEF ? "("+c.regularDefinition+")" : "") << "  ";
