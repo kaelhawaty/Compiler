@@ -4,14 +4,13 @@
 
 #ifndef COMPILER_COMPONENTPARSER_H
 #define COMPILER_COMPONENTPARSER_H
-
-
-#include "NFAGenerator.h"
+#include <string>
+#include "Component.h"
 #include "NFA_Builder.h"
 
 class ComponentParser {
 private:
-    unordered_map<string, NFA> regToNFA;
+    std::unordered_map<std::string, NFA>& regToNFA;
     NFA_Builder addExpressionInBrackets(std::vector<component>&, int* index);
 
     static NFA_Builder applyToOperation(component&, component&);
@@ -19,7 +18,7 @@ private:
     static NFA_Builder applyBinaryOperation(component_type, NFA_Builder&&, NFA_Builder&&);
 
 public:
-    ComponentParser(unordered_map<string,NFA>& regularDefinitions): regToNfa(RegularDefinition) {}
+    explicit ComponentParser(std::unordered_map<std::string,NFA>& regularDefinitions): regToNFA(regularDefinitions) {}
     NFA buildParseTree(std::vector<component>&);
     NFA addCharNFA(char);
 };

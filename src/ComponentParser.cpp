@@ -6,6 +6,8 @@
 #include "ComponentParser.h"
 #include "NFA_Builder.h"
 
+using namespace std;
+
 template<typename t>
 t poll(std::stack<t>& st) {
     if (!st.empty()) {

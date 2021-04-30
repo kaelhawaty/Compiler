@@ -8,27 +8,12 @@
 #include <vector>
 #include <unordered_map>
 #include "NFA.h"
-#include "ComponentParser.h"
 #include "RegularExpression.h"
-
+#include "ComponentParser.h"
+#include "Component.h"
 
 using namespace std;
-enum component_type {
-    REG_EXP,
-    RED_DEF,
-    EQUAL,
-    CLOSE_BRACKETS,
-    OPEN_BRACKETS,
-    POS_CLOSURE,
-    KLEENE_CLOSURE,
-    CONCAT,
-    OR,
-    TO
-};
-struct component {
-    component_type type;
-    string regularDefinition;
-};
+
 
 class NFAGenerator {
 public:
