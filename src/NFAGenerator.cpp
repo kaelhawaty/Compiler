@@ -9,12 +9,12 @@ NFAGenerator::NFAGenerator(string inputFilePath){
     this->inputFilePath = inputFilePath;
 }
 
-NFANode NFAGenerator::getNFA() {
+NFA NFAGenerator::getNFA() {
     this->readInputFile();
     this->addBasicRegularDefinitions();
     for(string& line : this->inputFileLines)
         parseLine(line);
-    return NFANode();
+    return NFA();
 }
 
 void NFAGenerator::readInputFile() {
@@ -39,13 +39,13 @@ void NFAGenerator::addBasicRegularDefinitions() {
     for(char i='0' ; i<= '9' ;i++)
         addSingleChar(i);
     //TODO : Build required NFA
-    this->regularDefinitions["Lambda"] = {"Lambda"};
+    this->regularDefinitions["Lambda"] = NFA(); //{"Lambda"}
 }
 
 void NFAGenerator::addSingleChar(char c) {
     string let(1,c);
     //TODO : Build required NFA
-    this->regularDefinitions[let] = {let};
+    this->regularDefinitions[let] = NFA(); //{let}
 }
 // this function is just for debugging ignore it
 string getText(component_type c) {
@@ -81,10 +81,10 @@ void NFAGenerator::parseLine(string s) {
 void NFAGenerator::addRegularDefinition(string name, string expression) {
     vector<component> components = getComponents(expression);
     //TODO : use components to build tree for expression (Build required NFA)
-    regularDefinitions[name] = {name};
+    regularDefinitions[name] = NFA(); //{name}
 
     if(DEBUG1)for(component& c : components)
-        cout << getText(c.type) << "   " << (c.type==RED_DEF ? "("+c.regularDefinition.name+")" : "") << "  ";
+        cout << getText(c.type) << "   " << (c.type==RED_DEF ? "("+c.regularDefinition+")" : "") << "  ";
     if(DEBUG1)cout << endl << endl;
 }
 
@@ -125,7 +125,7 @@ vector<component> NFAGenerator::getComponents(string s) {
         component_type type = getOperationType(s[i]);
         if(type == RED_DEF){
             if( i+1 < s.length() && s[i] == '\\' && s[i+1] == 'L'){
-                components.push_back({type,this->regularDefinitions["Lambda"]});
+                components.push_back({type,"Lambda"}); //this->regularDefinitions["Lambda"]
                 i++;
             }else{
                 string name;
@@ -139,7 +139,7 @@ vector<component> NFAGenerator::getComponents(string s) {
                         j+=1;
                     }
                 }
-                components.push_back({type,this->regularDefinitions[name]});
+                components.push_back({type,name}); //this->regularDefinitions[name]
                 i = j-1;
             }
 

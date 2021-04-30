@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "NFANode.h"
-#include "RegularDefinition.h"
+#include "NFA.h"
+
 
 using namespace std;
 enum component_type {
@@ -25,17 +25,17 @@ enum component_type {
 };
 struct component {
     component_type type;
-    RegularDefinition regularDefinition;
+    string regularDefinition;
 };
 
 class NFAGenerator {
 public:
     NFAGenerator(string inputFilePath);
-    NFANode getNFA();
+    NFA getNFA();
 
 private:
     string inputFilePath;
-    unordered_map<string,RegularDefinition> regularDefinitions;
+    unordered_map<string,NFA> regularDefinitions;
     vector<string> inputFileLines;
 
     void readInputFile();
