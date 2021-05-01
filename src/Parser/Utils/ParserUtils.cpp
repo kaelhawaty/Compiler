@@ -2,13 +2,8 @@
 // Created by Abd Elkader on 4/30/2021.
 //
 
-#include "ParserUtils.h"
-
-
-
-#include "../Component.h"
 #include <string>
-
+#include "ParserUtils.h"
 // this function is just for debugging
 std::string getText(component_type c) {
     switch (c){

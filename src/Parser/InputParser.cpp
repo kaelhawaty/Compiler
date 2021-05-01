@@ -10,7 +10,7 @@
 InputParser::InputParser(const std::string& inputFilePath){
     std::vector<std::string> inputFileLines = this->readInputFile(inputFilePath);
     this->addBasicRegularDefinitions();
-    for(std::string& line : inputFileLines)
+    for(std::string& line : inputFileLines) if(!line.empty())
         parseLine(line);
 }
 
@@ -37,11 +37,9 @@ std::vector<std::string> InputParser::readInputFile(const std::string& inputFile
 }
 
 void InputParser::addBasicRegularDefinitions() {
-    for(char i=1 ; i< CHAR_MAX;i++)
-        std::cout << i << std::endl,addSingleChar(i);
 
-    // EPSILON = 0 (0 is the Regular Definition name and component for EPSILON )
-    addSingleChar(EPSILON);
+    for(char i=0 ; i< CHAR_MAX;i++)
+        addSingleChar(i);
 }
 
 void InputParser::addSingleChar(char c) {
@@ -91,7 +89,7 @@ void InputParser::addRegularDefinition(const std::string& name,const std::vector
     if(DEBUG1)std::cout << std::endl << std::endl;
 }
 
-void InputParser::addPunctuations(std::string s) {
+void InputParser::addPunctuations(const std::string& s) {
 
     for(int i=1 ; i < s.size()-1 ; i++){
         if(s[i] == ' ') continue;
@@ -108,7 +106,7 @@ void InputParser::addPunctuations(std::string s) {
 
 }
 
-void InputParser::addKeywords(std::string s) {
+void InputParser::addKeywords(const std::string& s) {
     std::regex rgx("\\w+");
 
     for( std::sregex_iterator it(s.begin(), s.end(), rgx), it_end; it != it_end; ++it ){
@@ -121,13 +119,17 @@ void InputParser::addKeywords(std::string s) {
 
 }
 
-std::vector<component> InputParser::getComponents(std::string s) {
+std::vector<component> InputParser::getComponents(const std::string& s) {
     std::vector<component> components;
     for(int i=0 ; i< s.length() ;i++){
         component_type type = getOperationType(s[i]);
+        if(type == CONCAT) continue;
         if(type == RED_DEF){
+            if(!components.empty() && canConcatenate(components.back().type))
+                components.push_back({CONCAT});
             if( i+1 < s.length() && s[i] == '\\' && s[i+1] == 'L'){
-                components.push_back({type,std::string(1,0)}); //this->regularDefinitions["Lambda"]
+                // 0 is the Regular Definition name for EPSILON
+                components.push_back({type,std::string(1,0)});
                 i++;
             }else{
                 std::string name;
@@ -156,39 +158,17 @@ std::vector<component> InputParser::getComponents(std::string s) {
             }
 
         }else{
+            if(type==OPEN_BRACKETS && !components.empty() && canConcatenate(components.back().type))
+                components.push_back({CONCAT});
+
             components.push_back({type});
         }
     }
-    return filterComponents(components);
+    return components;
 }
 
-//removes unnecessary CONCAT operations
-std::vector<component> InputParser::filterComponents(std::vector<component> &components) {
-    int size = components.size();
-    std::vector<bool> exist(size, true);
-    for(int i=0 ; i< size ; i++){
-        component_type type = components[i].type;
-        if( type == KLEENE_CLOSURE || type == POS_CLOSURE || type == CLOSE_BRACKETS || type == OR || type == TO){
-            int j = i-1;
-            while (j>=0 && components[j].type == CONCAT){
-                exist[j] = false;
-                j--;
-            }
-        }
-        if(type == OPEN_BRACKETS || type == OR || type == TO) {
-            int j = i + 1;
-            while (j < size && components[j].type == CONCAT) {
-                exist[j] = false;
-                j++;
-            }
-        }
-    }
-    std::vector<component> filteredComponents;
-    for(int i=0 ; i< size ; i++)
-        if(exist[i])
-            filteredComponents.push_back(components[i]);
-
-    return filteredComponents;
+bool InputParser::canConcatenate(component_type type) {
+    return type == RED_DEF || type == CLOSE_BRACKETS || type == KLEENE_CLOSURE || type == POS_CLOSURE;
 }
 
 component_type InputParser::getOperationType(char c) {
@@ -203,3 +183,4 @@ component_type InputParser::getOperationType(char c) {
         default: return RED_DEF;
     }
 }
+

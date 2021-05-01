@@ -7,9 +7,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "../NFA/NFA.h"
-#include "RegularExpression.h"
-#include "ComponentParser.h"
+#include <unordered_set>
 #include "Component.h"
 
 
@@ -24,21 +22,19 @@ private:
 
     std::vector<std::string> regularExpressionsNames;
     std::vector<std::pair<std::string,std::vector<component>>> regularDefinitionsComponents;
-    std::set<std::string> regularDefinitionsNames;
+    std::unordered_set<std::string> regularDefinitionsNames;
 
     std::vector<std::string> readInputFile(const std::string& inputFilePath);
     void parseLine(std::string s);
     void addBasicRegularDefinitions();
-    std::vector<component>getComponents(std::string s);
+    std::vector<component>getComponents(const std::string& s);
     component_type getOperationType(char c);
-    std::vector<component> filterComponents(std::vector<component>& components);
-    void addKeywords(std::string s);
-    void addPunctuations(std::string s);
+    bool canConcatenate(component_type type);
+    void addKeywords(const std::string& s);
+    void addPunctuations(const std::string& s);
     void addRegularDefinition(const std::string& name,const std::vector<component>& components);
     void addRegularDefinition(const std::string& name,const std::string& expression);
     void addSingleChar(char c);
-
-
 };
 
 
