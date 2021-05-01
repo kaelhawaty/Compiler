@@ -33,7 +33,7 @@ namespace Parser_tests {
 
     TEST(ParsingFile, simpleRules) {
         Parser parser;
-        std::vector<RegularExpression> regs = parser.parse(R"(F:\Compiler\Compiler\input)");
+        std::vector<RegularExpression> regs = parser.parse(R"(..\..\Tests\Input_samples\lab_input)");
         std::reverse(regs.begin(), regs.end());
         EXPECT_TRUE(tryAllRegExp(regs, "int"));
         EXPECT_TRUE(tryAllRegExp(regs, "rkgmnkrgn"));
