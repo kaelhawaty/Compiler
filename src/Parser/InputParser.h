@@ -24,6 +24,7 @@ private:
 
     std::vector<std::string> regularExpressionsNames;
     std::vector<std::pair<std::string,std::vector<component>>> regularDefinitionsComponents;
+    std::set<std::string> regularDefinitionsNames;
 
     std::vector<std::string> readInputFile(const std::string& inputFilePath);
     void parseLine(std::string s);
@@ -33,7 +34,8 @@ private:
     std::vector<component> filterComponents(std::vector<component>& components);
     void addKeywords(std::string s);
     void addPunctuations(std::string s);
-    void addRegularDefinition(const std::string& name,std::string expression);
+    void addRegularDefinition(const std::string& name,const std::vector<component>& components);
+    void addRegularDefinition(const std::string& name,const std::string& expression);
     void addSingleChar(char c);
 
 

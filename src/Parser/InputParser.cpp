@@ -47,7 +47,8 @@ void InputParser::addBasicRegularDefinitions() {
 void InputParser::addSingleChar(char c) {
     std::string let(1,c);
     std::vector<component> letComponents(1,{RED_DEF,let});
-    this->regularDefinitionsComponents.emplace_back(let,letComponents);
+    addRegularDefinition(let,letComponents);
+
 }
 
 void InputParser::parseLine(std::string s) {
@@ -60,22 +61,32 @@ void InputParser::parseLine(std::string s) {
     }else{
         int ind = 0;
         while (!(s[ind]=='=' || s[ind]==':')) ind++;
+
         std::string name = s.substr(0,ind);
-        name = trim(name);
         std::string expression = s.substr(ind+1);
+        name = trim(name);
         expression = trim(expression);
+
         addRegularDefinition(name,expression);
-        if (s[ind] == ':') {
+
+
+        if (s[ind] == ':')
             this->regularExpressionsNames.emplace_back(name);
-        }
+
     }
 }
 
-void InputParser::addRegularDefinition(const std::string& name, std::string expression) {
-    std::vector<component> components = getComponents(std::move(expression));
-    this->regularDefinitionsComponents.emplace_back(name,components);
+void InputParser::addRegularDefinition(const std::string &name, const std::string &expression) {
+    std::vector<component> components = getComponents(expression);
+    addRegularDefinition(name,components);
+}
 
-    if(DEBUG1)for(component& c : components)
+void InputParser::addRegularDefinition(const std::string& name,const std::vector<component>& components) {
+
+    this->regularDefinitionsComponents.emplace_back(name,components);
+    this->regularDefinitionsNames.insert(name);
+
+    if(DEBUG1)for(const component& c : components)
             std::cout << getText(c.type) << "   " << (c.type==RED_DEF ? "("+c.regularDefinition+")" : "") << "  ";
     if(DEBUG1)std::cout << std::endl << std::endl;
 }
@@ -102,12 +113,9 @@ void InputParser::addKeywords(std::string s) {
 
     for( std::sregex_iterator it(s.begin(), s.end(), rgx), it_end; it != it_end; ++it ){
         std::string keyword = (*it)[0];
-        std::string keywordWithSpaces;
-        for(char c : keyword){
-            keywordWithSpaces.push_back(c);
-            keywordWithSpaces.push_back(' ');
-        }
-        addRegularDefinition(keyword,trim(keywordWithSpaces));
+        std::string keywordWithSpaces = addSpacesBetweenChars(keyword);
+
+        addRegularDefinition(keyword,keywordWithSpaces);
         this->regularExpressionsNames.emplace_back(keyword);
     }
 
@@ -133,7 +141,17 @@ std::vector<component> InputParser::getComponents(std::string s) {
                         j+=1;
                     }
                 }
-                components.push_back({type,name}); //this->regularDefinitions[name]
+                //here we check if this regular definition exists, otherwise we split it into letters
+                if(this->regularDefinitionsNames.count(name)){
+                    components.push_back({type,name});
+                }else{
+                    std::vector<component> lettersComponents = getComponents(addSpacesBetweenChars(name));
+                    components.insert(
+                            components.end(),
+                            std::make_move_iterator(lettersComponents.begin()),
+                            std::make_move_iterator(lettersComponents.end())
+                            );
+                }
                 i = j-1;
             }
 
