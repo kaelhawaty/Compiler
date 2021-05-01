@@ -6,11 +6,10 @@
 #define COMPILER_PARSER_H
 
 #include <string>
-
+#include "RegularExpression.h"
 class Parser {
 public:
-    Parser(const std::string& inputFilePath);
+    std::vector<RegularExpression> parse(const std::string& inputFilePath);
 };
-
 
 #endif //COMPILER_PARSER_H

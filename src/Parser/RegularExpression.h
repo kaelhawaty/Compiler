@@ -12,16 +12,22 @@
 
 class RegularExpression {
 private:
-    std::string expression;
     std::string name;
     int priority;
     NFA nfa;
 
 public:
-    RegularExpression(std::string& exp, std::string& name, int priority, NFA& nfa) : expression(exp),
-                                                                                     name(name),
-                                                                                     priority(priority),
-                                                                                     nfa(nfa){}
+    RegularExpression(std::string& name, int priority, NFA& nfa) : name(name),
+                                                                   priority(priority),
+                                                                   nfa(nfa){}
+
+    // for testing purposes.
+    NFA& getNFA() {
+        return nfa;
+    }
+    std::string getName() {
+        return name;
+    }
 };
 
 #endif //COMPILER_REGULAREXPRESSION_H

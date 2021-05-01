@@ -4,7 +4,6 @@
 
 #include <stack>
 #include "ComponentParser.h"
-#include "../NFA/NFA_Builder.h"
 
 using namespace std;
 
@@ -19,10 +18,25 @@ t poll(std::stack<t>& st) {
 }
 // it can be extendable to more operations
 bool hasPrecedence(component_type t1, component_type t2) {
-    return t1 == OR || (t1 == CONCAT && t2 == OR);
+    return (t1 == CONCAT && t2 == OR);
 }
 
-NFA ComponentParser::buildParseTree(std::vector<component>& components) {
+
+std::unordered_map<std::string, NFA> ComponentParser::regDefinitionsToNFAs(vector<std::pair<std::string, std::vector<component>>> & regDefinitions) {
+    for (std::pair<std::string, std::vector<component>> regDef: regDefinitions) {
+        if (regDef.second.size() == 1)
+            this->regToNFA[regDef.first] = ComponentParser::CharToNFA(regDef.second[0]);
+        else
+            this->regToNFA[regDef.first] = this->SingleRegDefToNFA(regDef.second);
+    }
+    return this->regToNFA;
+}
+
+NFA ComponentParser::CharToNFA(component& regDefinitionChar) {
+    return NFA(regDefinitionChar.regularDefinition[0]);
+}
+
+NFA ComponentParser::SingleRegDefToNFA(std::vector<component>& components) {
 
     std::stack<NFA_Builder> NFABuilders;
     std::stack<component_type> operations;
@@ -84,7 +98,7 @@ NFA_Builder ComponentParser::addExpressionInBrackets(vector<component>& componen
         exit(-1);
     }
     *index = j;
-    return NFA_Builder(buildParseTree(temp));
+    return NFA_Builder(SingleRegDefToNFA(temp));
 }
 
 NFA_Builder ComponentParser::addClosure(component& comp, NFA_Builder&& nfaBuilder) {
@@ -99,18 +113,15 @@ NFA_Builder ComponentParser::applyBinaryOperation(component_type type, NFA_Build
     }
 }
 
-NFA ComponentParser::addCharNFA(char regDefinitionChar) {
-    return NFA(regDefinitionChar);
-}
-
 NFA_Builder ComponentParser::applyToOperation(component& c1, component& c2) {
     char first = c1.regularDefinition[0];
     char second = c2.regularDefinition[0];
     if (second - first < 0) exit(-1);
     NFA_Builder nfa_builder((NFA(first)));
-    while (++first >= second) {
+    while (++first <= second) {
         nfa_builder.Or(NFA (first));
     }
     return nfa_builder;
 }
+
 

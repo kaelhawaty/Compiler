@@ -7,6 +7,7 @@
 int main()
 {
     std::string inputPath = "..\\input";
-    Parser p = Parser(inputPath);
+    Parser p;
+    p.parse(inputPath);
     return 0;
 }

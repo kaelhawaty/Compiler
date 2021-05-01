@@ -5,6 +5,8 @@
 #ifndef COMPILER_COMPONENT_H
 #define COMPILER_COMPONENT_H
 
+#include <utility>
+
 #include "string"
 
 enum component_type {
@@ -20,6 +22,8 @@ enum component_type {
     TO
 };
 struct component {
+    component(component_type type, std::string  regDef): type(type), regularDefinition(std::move(regDef)){}
+    explicit component(component_type type): type(type), regularDefinition(""){}
     component_type type;
     std::string regularDefinition;
 };

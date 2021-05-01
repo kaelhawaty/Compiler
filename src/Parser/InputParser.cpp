@@ -5,7 +5,8 @@
 #include "InputParser.h"
 #include "Utils/ParserUtils.h"
 
-#define DEBUG1 1
+#define DEBUG1 0
+const char EPSILON = 0;
 
 InputParser::InputParser(const std::string& inputFilePath){
     std::vector<std::string> inputFileLines = this->readInputFile(inputFilePath);
@@ -60,17 +61,15 @@ void InputParser::parseLine(std::string s) {
         int ind = 0;
         while (!(s[ind]=='=' || s[ind]==':')) ind++;
 
+
         std::string name = s.substr(0,ind);
-        std::string expression = s.substr(ind+1);
-        name = trim(name);
-        expression = trim(expression);
-
-        addRegularDefinition(name,expression);
-
-
         if (s[ind] == ':')
             this->regularExpressionsNames.emplace_back(name);
 
+        std::string expression = s.substr(ind+1);
+        name = trim(name);
+        expression = trim(expression);
+        addRegularDefinition(name,expression);
     }
 }
 
@@ -126,10 +125,10 @@ std::vector<component> InputParser::getComponents(const std::string& s) {
         if(type == CONCAT) continue;
         if(type == RED_DEF){
             if(!components.empty() && canConcatenate(components.back().type))
-                components.push_back({CONCAT});
+                components.emplace_back(CONCAT);
             if( i+1 < s.length() && s[i] == '\\' && s[i+1] == 'L'){
                 // 0 is the Regular Definition name for EPSILON
-                components.push_back({type,std::string(1,0)});
+                components.emplace_back(type,std::string(1,0));
                 i++;
             }else{
                 std::string name;
@@ -145,7 +144,7 @@ std::vector<component> InputParser::getComponents(const std::string& s) {
                 }
                 //here we check if this regular definition exists, otherwise we split it into letters
                 if(this->regularDefinitionsNames.count(name)){
-                    components.push_back({type,name});
+                    components.emplace_back(type,name);
                 }else{
                     std::vector<component> lettersComponents = getComponents(addSpacesBetweenChars(name));
                     components.insert(
@@ -159,9 +158,9 @@ std::vector<component> InputParser::getComponents(const std::string& s) {
 
         }else{
             if(type==OPEN_BRACKETS && !components.empty() && canConcatenate(components.back().type))
-                components.push_back({CONCAT});
+                components.emplace_back(CONCAT);
 
-            components.push_back({type});
+            components.emplace_back(type);
         }
     }
     return components;

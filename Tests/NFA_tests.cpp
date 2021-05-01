@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include <climits>
 #include "../src/NFA/NFA.h"
 #include "../src/NFA/NFA_Builder.h"
 
