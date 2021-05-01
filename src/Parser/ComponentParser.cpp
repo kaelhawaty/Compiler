@@ -7,6 +7,10 @@
 
 using namespace std;
 
+
+/**
+ * Gets the top element of a stack pop it from a stack.
+ */
 template<typename t>
 t poll(std::stack<t>& st) {
     if (!st.empty()) {
@@ -16,7 +20,11 @@ t poll(std::stack<t>& st) {
     }
     exit(-1);
 }
-// it can be extendable to more operations
+
+
+/**
+ * compare the two component types based on their Precedence.
+ */
 bool hasPrecedence(component_type t1, component_type t2) {
     return (t1 == CONCAT && t2 == OR);
 }
@@ -24,6 +32,7 @@ bool hasPrecedence(component_type t1, component_type t2) {
 
 std::unordered_map<std::string, NFA> ComponentParser::regDefinitionsToNFAs(vector<std::pair<std::string, std::vector<component>>> & regDefinitions) {
     for (std::pair<std::string, std::vector<component>> regDef: regDefinitions) {
+        // If the case is a single char.
         if (regDef.second.size() == 1)
             this->regToNFA[regDef.first] = ComponentParser::CharToNFA(regDef.second[0]);
         else
@@ -43,6 +52,7 @@ NFA ComponentParser::SingleRegDefToNFA(std::vector<component>& components) {
 
     for (int i = 0; i < components.size(); i++) {
         component comp = components[i];
+        // 'TO' has highest precedence if found.
         if (i + 1 < components.size() && components[i + 1].type == TO) {
             if (i + 2 >= components.size()) {
                 exit(-1);
@@ -53,12 +63,14 @@ NFA ComponentParser::SingleRegDefToNFA(std::vector<component>& components) {
         else if (comp.type == POS_CLOSURE || comp.type == KLEENE_CLOSURE) {
             NFABuilders.push(addClosure(comp, poll(NFABuilders)));
         }
+        // If open Brackets was found, then get the whole expression within the brackets as a single NFA_builder.
         else if (comp.type == OPEN_BRACKETS) {
             NFABuilders.push(addExpressionInBrackets(components, &i));
         }
         else if (comp.type == REG_EXP || comp.type == RED_DEF) {
             NFABuilders.push(NFA_Builder(regToNFA[comp.regularDefinition]));
         }
+        // Apply a binary operation based on the precedence.
         else if (comp.type == CONCAT || comp.type == OR) {
             while (!operations.empty() && hasPrecedence(operations.top(), comp.type)) {
                 NFABuilders.push(applyBinaryOperation(poll(operations), poll(NFABuilders), poll(NFABuilders)));
@@ -67,6 +79,7 @@ NFA ComponentParser::SingleRegDefToNFA(std::vector<component>& components) {
         }
     }
 
+    // Check if there's more operations.
     while (!operations.empty()) {
         NFABuilders.push(applyBinaryOperation(poll(operations), poll(NFABuilders), poll(NFABuilders)));
     }
@@ -79,6 +92,7 @@ NFA_Builder ComponentParser::addExpressionInBrackets(vector<component>& componen
     std::vector<component> temp;
     int bracketsCount = 1;
     int j;
+    // Get the whole Expression between brackets.
     for (j = *index + 1; j < components.size(); j++) {
         if (components[j].type == OPEN_BRACKETS)
             bracketsCount++;
@@ -93,6 +107,7 @@ NFA_Builder ComponentParser::addExpressionInBrackets(vector<component>& componen
         }
         temp.push_back(components[j]);
     }
+    // If we can't find the corresponding closing brackets.
     if (bracketsCount != 0) {
         // bad parsing
         exit(-1);
@@ -114,6 +129,7 @@ NFA_Builder ComponentParser::applyBinaryOperation(component_type type, NFA_Build
 }
 
 NFA_Builder ComponentParser::applyToOperation(component& c1, component& c2) {
+    // Assumption that 'TO' operation takes only rhs char, and lhs char.
     char first = c1.regularDefinition[0];
     char second = c2.regularDefinition[0];
     if (second - first < 0) exit(-1);
