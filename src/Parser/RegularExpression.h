@@ -22,10 +22,10 @@ public:
                                                                    nfa(nfa){}
 
     // for testing purposes.
-    NFA& getNFA() {
+    const NFA& getNFA() {
         return nfa;
     }
-    std::string getName() {
+    const std::string& getName() {
         return name;
     }
 };

@@ -20,7 +20,7 @@ vector<RegularExpression> Parser::parse(const string &inputFilePath) {
 
     vector<RegularExpression> results;
     int order = 1;
-    for (string regExp: regularExpressions) {
+    for (string& regExp: regularExpressions) {
         results.emplace_back(regExp, order++, regDefToNFA[regExp]);
     }
     return results;

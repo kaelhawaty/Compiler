@@ -3,6 +3,7 @@
 //
 
 #include <stack>
+#include <iostream>
 #include "ComponentParser.h"
 
 using namespace std;
@@ -14,11 +15,11 @@ using namespace std;
 template<typename t>
 t poll(std::stack<t>& st) {
     if (!st.empty()) {
-        t top = st.top();
+        t top = std::move(st.top());
         st.pop();
         return top;
     }
-    exit(-1);
+    throw logic_error("Stack is empty, internal Error");
 }
 
 
@@ -30,22 +31,26 @@ bool hasPrecedence(component_type t1, component_type t2) {
 }
 
 
-std::unordered_map<std::string, NFA> ComponentParser::regDefinitionsToNFAs(vector<std::pair<std::string, std::vector<component>>> & regDefinitions) {
-    for (std::pair<std::string, std::vector<component>> regDef: regDefinitions) {
+const std::unordered_map<std::string, NFA>& ComponentParser::regDefinitionsToNFAs(const vector<std::pair<std::string, std::vector<component>>> & regDefinitions) {
+    for (const auto& [regularDefinition, components] : regDefinitions) {
         // If the case is a single char.
-        if (regDef.second.size() == 1)
-            this->regToNFA[regDef.first] = ComponentParser::CharToNFA(regDef.second[0]);
-        else
-            this->regToNFA[regDef.first] = this->SingleRegDefToNFA(regDef.second);
+        try {
+            if (components.size() == 1)
+                this->regToNFA[regularDefinition] = ComponentParser::CharToNFA(components[0]);
+            else
+                this->regToNFA[regularDefinition] = this->SingleRegDefToNFA(components);
+        } catch (logic_error& e) {
+            std::cerr << "Couldn't Parse " << regularDefinition << "\n" << e.what() << "\nCheck your rules format.";
+        }
     }
     return this->regToNFA;
 }
 
-NFA ComponentParser::CharToNFA(component& regDefinitionChar) {
+NFA ComponentParser::CharToNFA(const component& regDefinitionChar) {
     return NFA(regDefinitionChar.regularDefinition[0]);
 }
 
-NFA ComponentParser::SingleRegDefToNFA(std::vector<component>& components) {
+NFA ComponentParser::SingleRegDefToNFA(const std::vector<component>& components) {
 
     std::stack<NFA_Builder> NFABuilders;
     std::stack<component_type> operations;
@@ -55,7 +60,7 @@ NFA ComponentParser::SingleRegDefToNFA(std::vector<component>& components) {
         // 'TO' has highest precedence if found.
         if (i + 1 < components.size() && components[i + 1].type == TO) {
             if (i + 2 >= components.size()) {
-                exit(-1);
+                throw logic_error("to Use '-', you have to have two chars around it");
             }
             NFABuilders.push(applyToOperation(components[i], components[i + 2]));
             i += 2;
@@ -88,7 +93,7 @@ NFA ComponentParser::SingleRegDefToNFA(std::vector<component>& components) {
 }
 
 
-NFA_Builder ComponentParser::addExpressionInBrackets(vector<component>& components, int *index) {
+NFA_Builder ComponentParser::addExpressionInBrackets(const vector<component>& components, int *index) {
     std::vector<component> temp;
     int bracketsCount = 1;
     int j;
@@ -103,36 +108,36 @@ NFA_Builder ComponentParser::addExpressionInBrackets(vector<component>& componen
         }
         else if (bracketsCount < 0) {
             // bad parsed
-            exit(-1);
+            throw logic_error("Brackets are not balanced");
         }
         temp.push_back(components[j]);
     }
     // If we can't find the corresponding closing brackets.
     if (bracketsCount != 0) {
         // bad parsing
-        exit(-1);
+        throw logic_error("Brackets are not balanced");
     }
     *index = j;
     return NFA_Builder(SingleRegDefToNFA(temp));
 }
 
-NFA_Builder ComponentParser::addClosure(component& comp, NFA_Builder&& nfaBuilder) {
+NFA_Builder ComponentParser::addClosure(const component& comp, NFA_Builder nfaBuilder) {
     return comp.type == POS_CLOSURE ? nfaBuilder.Positive_closure() : nfaBuilder.Kleene_closure();
 }
 
-NFA_Builder ComponentParser::applyBinaryOperation(component_type type, NFA_Builder&& firstNFABuilder, NFA_Builder&& secondNFABuilder) {
+NFA_Builder ComponentParser::applyBinaryOperation(const component_type type, NFA_Builder f, NFA_Builder s) {
     switch (type) {
-        case CONCAT: return firstNFABuilder.Concatenate(secondNFABuilder.build());
-        case OR: return firstNFABuilder.Or(secondNFABuilder.build());
-        default: exit(-1);
+        case CONCAT: return f.Concatenate(s.build());
+        case OR: return f.Or(s.build());
+        default: throw logic_error("Unknown Operation found");
     }
 }
 
-NFA_Builder ComponentParser::applyToOperation(component& c1, component& c2) {
+NFA_Builder ComponentParser::applyToOperation(const component& c1, const component& c2) {
     // Assumption that 'TO' operation takes only rhs char, and lhs char.
     char first = c1.regularDefinition[0];
     char second = c2.regularDefinition[0];
-    if (second - first < 0) exit(-1);
+    if (second - first < 0) throw logic_error("Check '-' syntax, You can use a-z not z-a");
     NFA_Builder nfa_builder((NFA(first)));
     while (++first <= second) {
         nfa_builder.Or(NFA (first));
