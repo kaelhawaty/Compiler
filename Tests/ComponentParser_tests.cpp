@@ -42,8 +42,8 @@ namespace ComponentParser_tests {
         std::vector<std::pair<std::string, std::vector<component>>> components = buildBasicComponents();
 
         components.emplace_back("id", std::vector<component>{component(RED_DEF, "M"),
-                                                                                    component(CONCAT),
-                                                                                    component(RED_DEF, "H")});
+                                                                  component(CONCAT),
+                                                                  component(RED_DEF, "H")});
         std::unordered_map<std::string, NFA> res = componentParser.regDefinitionsToNFAs(components);
         EXPECT_EQ(res.size(), 128);
         EXPECT_FALSE(MatchRegexp("a", res["id"]));
@@ -57,14 +57,14 @@ namespace ComponentParser_tests {
         std::vector<std::pair<std::string, std::vector<component>>> components = buildBasicComponents();
 
         components.emplace_back("id", std::vector<component>{component(RED_DEF, "M"),
-                                                                            component(CONCAT),
-                                                                            component(RED_DEF, "H"),
-                                                                            component(OR),
-                                                                            component(RED_DEF, "K"),
-                                                                            component(CONCAT),
-                                                                            component(RED_DEF, "O"),
-                                                                            component(OR),
-                                                                            component(RED_DEF, "Y")});
+                                                                  component(CONCAT),
+                                                                  component(RED_DEF, "H"),
+                                                                  component(OR),
+                                                                  component(RED_DEF, "K"),
+                                                                  component(CONCAT),
+                                                                  component(RED_DEF, "O"),
+                                                                  component(OR),
+                                                                  component(RED_DEF, "Y")});
         std::unordered_map<std::string, NFA> res = componentParser.regDefinitionsToNFAs(components);
         EXPECT_EQ(res.size(), 128);
         EXPECT_FALSE(MatchRegexp("a", res["id"]));
@@ -81,16 +81,16 @@ namespace ComponentParser_tests {
         std::vector<std::pair<std::string, std::vector<component>>> components = buildBasicComponents();
         // M (H | K) O | Y
         components.emplace_back("id", std::vector<component>{component(RED_DEF, "M"),
-                                                                            component(CONCAT),
-                                                                            component(OPEN_BRACKETS),
-                                                                            component(RED_DEF, "H"),
-                                                                            component(OR),
-                                                                            component(RED_DEF, "K"),
-                                                                            component(CLOSE_BRACKETS),
-                                                                            component(CONCAT),
-                                                                            component(RED_DEF, "O"),
-                                                                            component(OR),
-                                                                            component(RED_DEF, "Y")});
+                                                                  component(CONCAT),
+                                                                  component(OPEN_BRACKETS),
+                                                                  component(RED_DEF, "H"),
+                                                                  component(OR),
+                                                                  component(RED_DEF, "K"),
+                                                                  component(CLOSE_BRACKETS),
+                                                                  component(CONCAT),
+                                                                  component(RED_DEF, "O"),
+                                                                  component(OR),
+                                                                  component(RED_DEF, "Y")});
         std::unordered_map<std::string, NFA> res = componentParser.regDefinitionsToNFAs(components);
         EXPECT_EQ(res.size(), 128);
         EXPECT_FALSE(MatchRegexp("a", res["id"]));
@@ -110,18 +110,18 @@ namespace ComponentParser_tests {
         std::vector<std::pair<std::string, std::vector<component>>> components = buildBasicComponents();
         // M (H | K)+ O | Y*
         components.emplace_back("id", std::vector<component>{component(RED_DEF, "M"),
-                                                                            component(CONCAT),
-                                                                            component(OPEN_BRACKETS),
-                                                                            component(RED_DEF, "H"),
-                                                                            component(OR),
-                                                                            component(RED_DEF, "K"),
-                                                                            component(CLOSE_BRACKETS),
-                                                                            component(POS_CLOSURE),
-                                                                            component(CONCAT),
-                                                                            component(RED_DEF, "O"),
-                                                                            component(OR),
-                                                                            component(RED_DEF, "Y"),
-                                                                            component(KLEENE_CLOSURE)});
+                                                                  component(CONCAT),
+                                                                  component(OPEN_BRACKETS),
+                                                                  component(RED_DEF, "H"),
+                                                                  component(OR),
+                                                                  component(RED_DEF, "K"),
+                                                                  component(CLOSE_BRACKETS),
+                                                                  component(POS_CLOSURE),
+                                                                  component(CONCAT),
+                                                                  component(RED_DEF, "O"),
+                                                                  component(OR),
+                                                                  component(RED_DEF, "Y"),
+                                                                  component(KLEENE_CLOSURE)});
         std::unordered_map<std::string, NFA> res = componentParser.regDefinitionsToNFAs(components);
         EXPECT_EQ(res.size(), 128);
         EXPECT_FALSE(MatchRegexp("a", res["id"]));
@@ -146,9 +146,22 @@ namespace ComponentParser_tests {
         std::vector<std::pair<std::string, std::vector<component>>> components = buildBasicComponents();
         // M (H | K)+ O | Y*
         components.emplace_back("id", std::vector<component>{component(RED_DEF, "A"),
-                                                                            component(TO),
-                                                                            component(RED_DEF, "Z")});
+                                                                   component(TO),
+                                                                   component(RED_DEF, "Z")});
         std::unordered_map<std::string, NFA> res = componentParser.regDefinitionsToNFAs(components);
         EXPECT_TRUE(MatchRegexp("A", res["id"]));
     }
+
+
+    TEST(BuildingNFAsFromMultipleComponents, Exception) {
+        ComponentParser componentParser;
+        std::vector<std::pair<std::string, std::vector<component>>> components = buildBasicComponents();
+        // M (H | K)+ O | Y*
+        components.emplace_back("id", std::vector<component>{component(OPEN_BRACKETS),
+                                                             component(OPEN_BRACKETS),
+                                                             component(RED_DEF, "Z")});
+        std::unordered_map<std::string, NFA> res = componentParser.regDefinitionsToNFAs(components);
+        EXPECT_EQ(res.size(), 127);
+    }
+
 }

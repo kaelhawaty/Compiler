@@ -122,13 +122,13 @@ NFA_Builder ComponentParser::addExpressionInBrackets(const vector<component>& co
 }
 
 NFA_Builder ComponentParser::addClosure(const component& comp, NFA_Builder nfaBuilder) {
-    return comp.type == POS_CLOSURE ? nfaBuilder.Positive_closure() : nfaBuilder.Kleene_closure();
+    return std::move(comp.type == POS_CLOSURE ? nfaBuilder.Positive_closure() : nfaBuilder.Kleene_closure());
 }
 
 NFA_Builder ComponentParser::applyBinaryOperation(const component_type type, NFA_Builder f, NFA_Builder s) {
     switch (type) {
-        case CONCAT: return f.Concatenate(s.build());
-        case OR: return f.Or(s.build());
+        case CONCAT: return std::move(f.Concatenate(s.build()));
+        case OR: return std::move(f.Or(s.build()));
         default: throw logic_error("Unknown Operation found");
     }
 }
@@ -142,7 +142,7 @@ NFA_Builder ComponentParser::applyToOperation(const component& c1, const compone
     while (++first <= second) {
         nfa_builder.Or(NFA (first));
     }
-    return nfa_builder;
+    return std::move(nfa_builder);
 }
 
 

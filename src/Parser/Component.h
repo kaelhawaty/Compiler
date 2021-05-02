@@ -22,7 +22,7 @@ enum component_type {
     TO
 };
 struct component {
-    component(component_type type, std::string  regDef): type(type), regularDefinition(std::move(regDef)){}
+    component(component_type type, std::string regDef): type(type), regularDefinition(std::move(regDef)){}
     explicit component(component_type type): type(type), regularDefinition(""){}
     friend bool operator == (const component& lhs, const component& rhs){
         return lhs.type == rhs.type && lhs.regularDefinition == rhs.regularDefinition;
