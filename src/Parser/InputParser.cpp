@@ -76,7 +76,6 @@ void InputParser::addRegularDefinition(const std::string &name, const std::strin
 }
 
 void InputParser::addRegularDefinition(const std::string& name,const std::vector<component>& components) {
-
     this->regularDefinitionsComponents.emplace_back(name,components);
     this->regularDefinitionsNames.insert(name);
 }

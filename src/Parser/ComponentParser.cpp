@@ -14,12 +14,9 @@ using namespace std;
  */
 template<typename t>
 t poll(std::stack<t>& st) {
-    if (!st.empty()) {
-        t top = std::move(st.top());
-        st.pop();
-        return top;
-    }
-    throw logic_error("Stack is empty, internal Error");
+    t top = std::move(st.top());
+    st.pop();
+    return top;
 }
 
 

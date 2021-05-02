@@ -7,9 +7,9 @@
 
 #include <string>
 #include "RegularExpression.h"
-class Parser {
-public:
-    std::vector<RegularExpression> parse(const std::string& inputFilePath);
+
+namespace Parser {
+    std::vector<RegularExpression> parse(const std::string &inputFilePath);
 };
 
 #endif //COMPILER_PARSER_H

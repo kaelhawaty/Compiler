@@ -21,32 +21,32 @@ namespace InputParser_tests{
 
         std::unordered_map<std::string, std::vector<component>> expectedRegDef;
         //letter = a-z | A-Z
-        expectedRegDef["letter"] = {component(RED_DEF,"a"),
-                                    component(TO),
-                                    component(RED_DEF,"z"),
-                                    component(OR),
-                                    component(RED_DEF,"A"),
-                                    component(TO),
-                                    component(RED_DEF,"Z")
+        expectedRegDef["letter"] = {{RED_DEF, "a"},
+                                    {TO, ""},
+                                    {RED_DEF, "z"},
+                                    {OR, ""},
+                                    {RED_DEF, "A"},
+                                    {TO, ""},
+                                    {RED_DEF, "Z"}
         };
         //num: digit+ | digit+ . digits ( \L | E digits)
-        expectedRegDef["num"] = {component(RED_DEF,"digit"),
-                                 component(POS_CLOSURE),
-                                 component(OR),
-                                 component(RED_DEF,"digit"),
-                                 component(POS_CLOSURE),
-                                 component(CONCAT),
-                                 component(RED_DEF,"."),
-                                 component(CONCAT),
-                                 component(RED_DEF,"digits"),
-                                 component(CONCAT),
-                                 component(OPEN_BRACKETS),
-                                 component(RED_DEF,std::string{0}),
-                                 component(OR),
-                                 component(RED_DEF,"E"),
-                                 component(CONCAT),
-                                 component(RED_DEF,"digits"),
-                                 component(CLOSE_BRACKETS)
+        expectedRegDef["num"] = {{RED_DEF, "digit"},
+                                 {POS_CLOSURE, ""},
+                                 {OR, ""},
+                                 {RED_DEF, "digit"},
+                                 {POS_CLOSURE, ""},
+                                 {CONCAT, ""},
+                                 {RED_DEF, "."},
+                                 {CONCAT, ""},
+                                 {RED_DEF, "digits"},
+                                 {CONCAT, ""},
+                                 {OPEN_BRACKETS, ""},
+                                 {RED_DEF, std::string{0}},
+                                 {OR, ""},
+                                 {RED_DEF, "E"},
+                                 {CONCAT, ""},
+                                 {RED_DEF, "digits"},
+                                 {CLOSE_BRACKETS, ""}
         };
         for(const auto& pr : regularDefinitionsComponents){
             if(expectedRegDef.count(pr.first))
