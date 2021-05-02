@@ -73,6 +73,8 @@ NFA ComponentParser::SingleRegDefToNFA(const std::vector<component>& components)
             NFABuilders.push(addExpressionInBrackets(components, &i));
         }
         else if (comp.type == REG_EXP || comp.type == RED_DEF) {
+            if (regToNFA.find(comp.regularDefinition) == regToNFA.end())
+                throw logic_error(comp.regularDefinition + " Was not seen before.");
             NFABuilders.push(NFA_Builder(regToNFA[comp.regularDefinition]));
         }
         // Apply a binary operation based on the precedence.
