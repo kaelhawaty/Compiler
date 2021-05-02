@@ -12,14 +12,15 @@ using namespace std;
 /**
  * Gets the top element of a stack pop it from a stack.
  */
-template<typename t>
-t poll(std::stack<t>& st) {
+template<typename T>
+T poll(std::stack<T> &st) {
     if (!st.empty()) {
-        t top = std::move(st.top());
+        T top = std::move(st.top());
         st.pop();
         return top;
     }
-    throw logic_error("Stack is empty, internal Error");
+    // This means that there is a formatting error in the rules file.
+    throw logic_error("Stack is empty, Format error");
 }
 
 

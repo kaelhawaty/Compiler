@@ -20,30 +20,24 @@ namespace Parser_tests {
         return st.count(nfa.get_end()) != 0;
     }
 
-    bool tryAllRegExp(std::vector<RegularExpression>& v, const std::string& target) {
-        for (RegularExpression reg: v) {
+    std::string tryAllRegExp(const std::vector<RegularExpression> &v, const std::string &target) {
+        for (const RegularExpression &reg: v) {
             if (MatchRegexp(target, reg.getNFA())) {
-                std::cout << target << " " << reg.getName() << "\n";
-                return true;
+                return reg.getName();
             }
         }
-        return false;
+        // This shouldn't match to any of the test cases.
+        return "";
     }
 
 
     TEST(ParsingFile, simpleRules) {
-        Parser parser;
-        std::vector<RegularExpression> regs = parser.parse(R"(..\..\Tests\Input_samples\lab_input)");
+        std::vector<RegularExpression> regs = Parser::parse(R"(..\..\Tests\Input_samples\lab_input)");
         std::reverse(regs.begin(), regs.end());
-        EXPECT_TRUE(tryAllRegExp(regs, "int"));
-        EXPECT_TRUE(tryAllRegExp(regs, "rkgmnkrgn"));
-        EXPECT_TRUE(tryAllRegExp(regs, "if"));
-        EXPECT_TRUE(tryAllRegExp(regs, "while"));
-        EXPECT_TRUE(tryAllRegExp(regs, "("));
-        EXPECT_TRUE(tryAllRegExp(regs, ";"));
-        EXPECT_TRUE(tryAllRegExp(regs, "515151515"));
-        EXPECT_TRUE(tryAllRegExp(regs, ">"));
-        EXPECT_TRUE(tryAllRegExp(regs, "*"));
-
+        std::vector<std::string> testCases{"int", "rkgmnkrgn", "if", "while", "(", ";", "515151515", ">", "*"};
+        std::vector<std::string> matched{"int", "id", "if", "while", "(", ";", "num", "relop", "mulop"};
+        for (int i = 0; i < testCases.size(); i++) {
+            EXPECT_EQ(tryAllRegExp(regs, testCases[i]), matched[i]);
+        }
     }
 }

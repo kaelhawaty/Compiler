@@ -9,6 +9,8 @@
 #include <string>
 
 std::string getText(component_type c);
+
 std::string trim(const std::string &s);
+
 std::string addSpacesBetweenChars(const std::string &s);
 #endif //COMPILER_PARSERUTILS_H
