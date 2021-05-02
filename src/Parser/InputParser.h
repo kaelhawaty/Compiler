@@ -15,8 +15,8 @@
 class InputParser {
 public:
     explicit InputParser(const std::string& inputFilePath);
-    std::vector<std::pair<std::string,std::vector<component>>> getRegularDefinitionsComponents();
-    std::vector<std::string> getRegularExpressions();
+    const std::vector<std::pair<std::string,std::vector<component>>>& getRegularDefinitionsComponents();
+    const std::vector<std::string>& getRegularExpressions();
 
 private:
 

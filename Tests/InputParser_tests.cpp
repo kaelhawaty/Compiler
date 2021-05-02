@@ -6,19 +6,6 @@
 
 namespace InputParser_tests{
 
-    bool areEqual(const component& lhs, const component& rhs)
-    {
-        return lhs.type == rhs.type && lhs.regularDefinition == rhs.regularDefinition;
-    }
-    bool areEqual(const std::vector<component>& lhs, const std::vector<component>& rhs)
-    {
-        if(lhs.size() != rhs.size()) return false;
-        for(int i=0 ; i< lhs.size() ;i++){
-            if(!areEqual(lhs[i],rhs[i]))
-                return false;
-        }
-        return true;
-    }
     TEST(lab_input,lab_input){
         std::string inputFilePath = R"(..\..\Tests\Input_samples\lab_input)";
         InputParser inputParser = InputParser(inputFilePath);
@@ -54,16 +41,16 @@ namespace InputParser_tests{
                                  component(RED_DEF,"digits"),
                                  component(CONCAT),
                                  component(OPEN_BRACKETS),
-                                 component(RED_DEF,std::string(1,0)),
+                                 component(RED_DEF,std::string{0}),
                                  component(OR),
                                  component(RED_DEF,"E"),
                                  component(CONCAT),
                                  component(RED_DEF,"digits"),
                                  component(CLOSE_BRACKETS)
         };
-        for(std::pair<std::string, std::vector<component>>& pr : regularDefinitionsComponents){
+        for(const auto& pr : regularDefinitionsComponents){
             if(expectedRegDef.count(pr.first))
-                EXPECT_TRUE(areEqual(pr.second, expectedRegDef[pr.first]));
+                EXPECT_TRUE(pr.second ==  expectedRegDef[pr.first]);
         }
     }
 }

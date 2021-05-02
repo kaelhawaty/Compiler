@@ -7,20 +7,19 @@
 #include "InputParser.h"
 #include "ComponentParser.h"
 
-using namespace std;
 
-vector<RegularExpression> Parser::parse(const string &inputFilePath) {
+std::vector<RegularExpression> Parser::parse(const std::string &inputFilePath) {
     InputParser inputParser = InputParser(inputFilePath);
-    vector<std::pair<string, vector<component>>> regularDefinitionsComponents =
+    std::vector<std::pair<std::string, std::vector<component>>> regularDefinitionsComponents =
             inputParser.getRegularDefinitionsComponents();
-    vector<string> regularExpressions = inputParser.getRegularExpressions();
+    std::vector<std::string> regularExpressions = inputParser.getRegularExpressions();
 
     ComponentParser componentParser;
     std::unordered_map<std::string, NFA> regDefToNFA = componentParser.regDefinitionsToNFAs(regularDefinitionsComponents);
 
-    vector<RegularExpression> results;
+    std::vector<RegularExpression> results;
     int order = 1;
-    for (string& regExp: regularExpressions) {
+    for (std::string& regExp: regularExpressions) {
         results.emplace_back(regExp, order++, regDefToNFA[regExp]);
     }
     return results;

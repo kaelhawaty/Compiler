@@ -5,7 +5,6 @@
 #include "InputParser.h"
 #include "Utils/ParserUtils.h"
 
-#define DEBUG1 0
 const char EPSILON = 0;
 
 InputParser::InputParser(const std::string& inputFilePath){
@@ -15,11 +14,11 @@ InputParser::InputParser(const std::string& inputFilePath){
         parseLine(line);
 }
 
-std::vector<std::pair<std::string, std::vector<component>>> InputParser::getRegularDefinitionsComponents() {
+const std::vector<std::pair<std::string, std::vector<component>>>& InputParser::getRegularDefinitionsComponents() {
     return this->regularDefinitionsComponents;
 }
 
-std::vector<std::string> InputParser::getRegularExpressions() {
+const std::vector<std::string>& InputParser::getRegularExpressions() {
     return this->regularExpressionsNames;
 }
 
@@ -44,14 +43,13 @@ void InputParser::addBasicRegularDefinitions() {
 }
 
 void InputParser::addSingleChar(char c) {
-    std::string let(1,c);
-    std::vector<component> letComponents(1,{RED_DEF,let});
+    std::string let{c};
+    std::vector<component> letComponents{{RED_DEF,let}};
     addRegularDefinition(let,letComponents);
 
 }
 
 void InputParser::parseLine(std::string s) {
-    if(DEBUG1)std::cout << s << std::endl;
     s = trim(s);
     if(s[0] == '['){
         addPunctuations(s);
@@ -74,18 +72,13 @@ void InputParser::parseLine(std::string s) {
 }
 
 void InputParser::addRegularDefinition(const std::string &name, const std::string &expression) {
-    std::vector<component> components = getComponents(expression);
-    addRegularDefinition(name,components);
+    addRegularDefinition(name, getComponents(expression));
 }
 
 void InputParser::addRegularDefinition(const std::string& name,const std::vector<component>& components) {
 
     this->regularDefinitionsComponents.emplace_back(name,components);
     this->regularDefinitionsNames.insert(name);
-
-    if(DEBUG1)for(const component& c : components)
-            std::cout << getText(c.type) << "   " << (c.type==RED_DEF ? "("+c.regularDefinition+")" : "") << "  ";
-    if(DEBUG1)std::cout << std::endl << std::endl;
 }
 
 void InputParser::addPunctuations(const std::string& s) {
@@ -100,7 +93,7 @@ void InputParser::addPunctuations(const std::string& s) {
             punctuation =s[i];
         }
         addSingleChar(punctuation);
-        this->regularExpressionsNames.emplace_back(std::string(1,punctuation));
+        this->regularExpressionsNames.emplace_back(std::string{punctuation});
     }
 
 }
@@ -128,7 +121,7 @@ std::vector<component> InputParser::getComponents(const std::string& s) {
                 components.emplace_back(CONCAT);
             if( i+1 < s.length() && s[i] == '\\' && s[i+1] == 'L'){
                 // 0 is the Regular Definition name for EPSILON
-                components.emplace_back(type,std::string(1,0));
+                components.emplace_back(type,std::string{EPSILON});
                 i++;
             }else{
                 std::string name;
