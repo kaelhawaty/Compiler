@@ -35,7 +35,7 @@ const std::unordered_map<std::string, NFA>& ComponentParser::regDefinitionsToNFA
     for (const auto& [regularDefinition, components] : regDefinitions) {
         // If the case is a single char.
         try {
-            if (components.size() == 1)
+            if (components.size() == 1 && components[0].regularDefinition.size() == 1)
                 this->regToNFA[regularDefinition] = ComponentParser::CharToNFA(components[0]);
             else
                 this->regToNFA[regularDefinition] = this->SingleRegDefToNFA(components);
@@ -135,9 +135,12 @@ NFA_Builder ComponentParser::applyBinaryOperation(const component_type type, NFA
 
 NFA_Builder ComponentParser::applyToOperation(const component& c1, const component& c2) {
     // Assumption that 'TO' operation takes only rhs char, and lhs char.
+    if (c1.regularDefinition.size() != 1 && c2.regularDefinition.size() != 1) {
+        throw logic_error("Check '-' syntax, Just use one char at each end\"eg: a-z\"");
+    }
     char first = c1.regularDefinition[0];
     char second = c2.regularDefinition[0];
-    if (second - first < 0) throw logic_error("Check '-' syntax, You can use a-z not z-a");
+    if (second - first < 0) throw logic_error("Check '-' syntax, eg: You can use a-z not z-a");
     NFA_Builder nfa_builder((NFA(first)));
     while (++first <= second) {
         nfa_builder.Or(NFA (first));
