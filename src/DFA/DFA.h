@@ -4,9 +4,11 @@
 
 #ifndef COMPILER_DFA_H
 #define COMPILER_DFA_H
-#include <unordered_map>
+
+#include <map>
 #include <vector>
 #include "../Parser/RegularExpression.h"
+#include "../NFA/NFA.h"
 
 struct Token {
     std::string regEXP;
@@ -16,20 +18,31 @@ struct Token {
 
 class DFA {
 public:
-    DFA(std::vector<RegularExpression>);
-    void set_input_stream(std::string input_stream);// open l file and store it in string;
-    Token get_next_token();
-private:
+    explicit DFA(const std::vector<RegularExpression> &NFAs);
+
     struct State {
+        explicit State(int id) : id(id), isAcceptingState(false) {}
+
         int id;
         bool isAcceptingState;
         std::string regEXP;
         std::unordered_map<char, int> transitions;
     };
+
+    const std::vector<State> &getStates() const;
+
+    void set_input_stream(std::string input_stream);// open l file and store it in string;
+    Token get_next_token();
+
+private:
+
     std::vector<State> states;
     std::string file_stream;
     int cursor;
+
     void minimize_DFA();
+
+    static void set_accepting_state(State &state, const NFA::Set &set, const std::vector<RegularExpression> &NFAs);
 
 };
 

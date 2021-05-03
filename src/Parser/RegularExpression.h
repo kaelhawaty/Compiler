@@ -17,16 +17,19 @@ private:
     NFA nfa;
 
 public:
-    RegularExpression(std::string& name, int priority, NFA& nfa) : name(name),
+    RegularExpression(const std::string& name, int priority, NFA& nfa) : name(name),
                                                                    priority(priority),
                                                                    nfa(nfa){}
 
     // for testing purposes.
-    const NFA& getNFA() {
+    const NFA & getNFA() const {
         return nfa;
     }
-    const std::string& getName() {
+    const std::string& getName() const{
         return name;
+    }
+    const int getPriority() const {
+        return priority;
     }
 };
 
