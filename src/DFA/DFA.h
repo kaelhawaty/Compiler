@@ -6,6 +6,8 @@
 #define COMPILER_DFA_H
 #include <unordered_map>
 #include <vector>
+#include <fstream>
+
 #include "../Parser/RegularExpression.h"
 
 struct Token {
@@ -17,7 +19,7 @@ struct Token {
 class DFA {
 public:
     DFA(std::vector<RegularExpression>);
-    void set_input_stream(std::string input_stream);// open l file and store it in string;
+    void set_input_stream(const std::string& input_stream);
     Token get_next_token();
 private:
     struct State {
@@ -27,10 +29,12 @@ private:
         std::unordered_map<char, int> transitions;
     };
     std::vector<State> states;
-    std::string file_stream;
-    int cursor;
+    std::fstream file_stream;
+    std::queue<Token> tokenBuffer;
+    int line_number;
     void minimize_DFA();
-
+    int get_next_line();
+    void performMaximalMunch(const std::string &line);
 };
 
 
