@@ -29,7 +29,7 @@ DFA::DFA(const std::vector<RegularExpression> &NFAs) {
                 states.emplace_back(state_id++);
                 unmarked_states.push(next);
             }
-            states[index].transitions.insert({c, visited.at(next)});
+            states[index].transitions[c] = visited.at(next);
         }
     }
 }

@@ -26,7 +26,7 @@ public:
         int id;
         bool isAcceptingState;
         std::string regEXP;
-        std::unordered_map<char, int> transitions;
+        std::vector<int> transitions;
     };
 
     const std::vector<State> &getStates() const;
