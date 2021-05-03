@@ -32,6 +32,10 @@ DFA::DFA(const std::vector<RegularExpression> &NFAs) {
             states[index].transitions[c] = visited.at(next);
         }
     }
+    int empty_set_index = visited.at(NFA::Set());
+    for (auto &state : states) {
+        state.transitions[0] = empty_set_index;
+    }
 }
 
 // Iterate over all NFAs and for each NFA we check if its end_state is in the current_set.

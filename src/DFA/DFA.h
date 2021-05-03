@@ -21,7 +21,9 @@ public:
     explicit DFA(const std::vector<RegularExpression> &NFAs);
 
     struct State {
-        explicit State(int id) : id(id), isAcceptingState(false) {}
+        explicit State(int id) : id(id), isAcceptingState(false) {
+            transitions.resize(CHAR_MAX);
+        }
 
         int id;
         bool isAcceptingState;
