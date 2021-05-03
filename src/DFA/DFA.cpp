@@ -37,7 +37,7 @@ int DFA::get_next_line() {
         std::vector<std::string> words{std::istream_iterator<std::string>{iss},
                                        std::istream_iterator<std::string>{}};
 
-        for (auto &word: words) {
+        for (const auto &word: words) {
             performMaximalMunch(word);
         }
         return this->tokenBuffer.size();
@@ -63,7 +63,9 @@ void DFA::performMaximalMunch(const std::string &word) {
         }
         if (lastAcceptingIndex == -1) {
             std::cerr << "Error in line " << line_number <<  " :" << word.substr(index) << " Couldn't match\n";
-            return performMaximalMunch(word.substr(index + 1));
+            // skip the first char, and try again from word[index + 1].
+            index++;
+            continue;
         }
 
         this->tokenBuffer.push({
