@@ -3,74 +3,75 @@
 //
 
 #include "DFA.h"
-#include <iterator>
-#include <sstream>
-#include <iostream>
 
-#define INIT_STATE 0
-#define FAILURE 0
 
-void DFA::set_input_stream(const std::string& input_stream) {
-    this->file_stream.open(input_stream, std::ios::in);
-    this->line_number = 0;
+DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
+    std::queue<NFA::Set> unmarked_states;
+    // Maps a given set of NFA nodes to its corresponding DFA state ID.
+    std::map<NFA::Set, int> visited;
+    // Set of all starting NFA nodes.
+    NFA::Set start;
+    for (const auto &regEXP : regEXPs) {
+        start.insert(regEXP.getNFA().get_start());
+    }
+    start = E_closure(start);
+    int state_id = 0;
+    visited[start] = state_id;
+    states.emplace_back(state_id++);
+    unmarked_states.push(start);
+    while (!unmarked_states.empty()) {
+        auto current = std::move(unmarked_states.front());
+        unmarked_states.pop();
+        int index = visited.at(current);
+        set_if_accepting_state(states[index], current, regEXPs);
+        for (char c = 1; c < CHAR_MAX; ++c) {// start from 1 since 0 is reserved for EPSILON.
+            NFA::Set next = E_closure(Move(current, c));
+            if (!visited.count(next)) {
+                visited.insert({next, state_id});
+                states.emplace_back(state_id++);
+                unmarked_states.push(next);
+            }
+            states[index].transitions[c] = visited.at(next);
+        }
+    }
+    int empty_set_index = visited.at(NFA::Set());
+    for (auto &state : states) {
+        state.transitions[0] = empty_set_index;
+    }
+}
+
+/*
+ * Sets the the DFA state to be an accepting state if it contains any accepting NFA nodes. If there are multiple, It picks
+ * the regular expression with minimal priority, i.e the earliest regular expression.
+ */
+void DFA::set_if_accepting_state(DFA::State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs) {
+    std::string regEXP;
+    int priority = INT_MAX;
+    for (const auto &regEXP : regEXPs) {
+        if (!set.count(regEXP.getNFA().get_end())) {
+            continue;
+        }
+        if (regEXP.getPriority() < priority) {
+            priority = regEXP.getPriority();
+            state.regEXP = regEXP.getName();
+            state.isAcceptingState = true;
+        }
+    }
+}
+
+void DFA::set_input_stream(std::string input_stream) {
+
 }
 
 Token DFA::get_next_token() {
-    if (tokenBuffer.empty()) {
-        if (!get_next_line()) {
-            // Todo: Perform error handling if there's no more tokens.
-        }
-    }
-    Token next_token = std::move(tokenBuffer.front());
-    tokenBuffer.pop();
-    return next_token;
+    return Token();
 }
 
-int DFA::get_next_line() {
-    if (!this->file_stream.is_open()) {
-        return FAILURE;
-    }
-    std::string line;
-    if (getline(this->file_stream, line)) {
-        line_number++;
-        std::istringstream iss(line);
-        std::vector<std::string> words{std::istream_iterator<std::string>{iss},
-                                       std::istream_iterator<std::string>{}};
+void DFA::minimize_DFA() {
 
-        for (const auto &word: words) {
-            performMaximalMunch(word);
-        }
-        return this->tokenBuffer.size();
-    }
-    else
-        return FAILURE;
 }
 
-void DFA::performMaximalMunch(const std::string &word) {
-    if (word.empty()) return;
-
-    int lastAcceptingState = -1;
-    int lastAcceptingIndex = -1;
-    int index = 0;
-    while (index < word.length()) {
-        State state = this->states[INIT_STATE];
-        for (int i = index; i < word.length(); i++) {
-            state = this->states.at(state.transitions.at(word[i]));
-            if (state.isAcceptingState) {
-                lastAcceptingIndex = i;
-                lastAcceptingState = state.id;
-            }
-        }
-        if (lastAcceptingIndex == -1) {
-            std::cerr << "Error in line " << line_number <<  " :" << word.substr(index) << " Couldn't match\n";
-            // skip the first char, and try again from word[index + 1].
-            index++;
-            continue;
-        }
-
-        this->tokenBuffer.push({
-            this->states[lastAcceptingState].regEXP,
-            word.substr(index, lastAcceptingIndex - index + 1)});
-        index = lastAcceptingIndex + 1;
-    }
+const std::vector<DFA::State> &DFA::getStates() const {
+    return states;
 }
+

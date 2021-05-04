@@ -4,11 +4,11 @@
 
 #ifndef COMPILER_DFA_H
 #define COMPILER_DFA_H
-#include <unordered_map>
-#include <vector>
-#include <fstream>
 
+#include <map>
+#include <vector>
 #include "../Parser/RegularExpression.h"
+#include "../NFA/NFA.h"
 
 struct Token {
     std::string regEXP;
@@ -18,23 +18,34 @@ struct Token {
 
 class DFA {
 public:
-    DFA(std::vector<RegularExpression>);
-    void set_input_stream(const std::string& input_stream);
-    Token get_next_token();
-private:
+    explicit DFA(const std::vector<RegularExpression> &regEXPs);
+
     struct State {
+        explicit State(int id) : id(id), isAcceptingState(false) {
+            transitions.resize(CHAR_MAX);
+        }
+
         int id;
         bool isAcceptingState;
         std::string regEXP;
-        std::unordered_map<char, int> transitions;
+        std::vector<int> transitions;
     };
+
+    const std::vector<State> &getStates() const;
+
+    void set_input_stream(std::string input_stream);// open l file and store it in string;
+    Token get_next_token();
+
+private:
+
     std::vector<State> states;
-    std::fstream file_stream;
-    std::queue<Token> tokenBuffer;
-    int line_number;
+    std::string file_stream;
+    int cursor;
+
     void minimize_DFA();
-    int get_next_line();
-    void performMaximalMunch(const std::string &line);
+
+    static void set_if_accepting_state(State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs);
+
 };
 
 
