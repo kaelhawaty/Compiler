@@ -18,7 +18,7 @@ struct Token {
 
 class DFA {
 public:
-    explicit DFA(const std::vector<RegularExpression> &NFAs);
+    explicit DFA(const std::vector<RegularExpression> &regEXPs);
 
     struct State {
         explicit State(int id) : id(id), isAcceptingState(false) {
@@ -44,7 +44,7 @@ private:
 
     void minimize_DFA();
 
-    static void set_accepting_state(State &state, const NFA::Set &set, const std::vector<RegularExpression> &NFAs);
+    static void set_accepting_state(State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs);
 
 };
 

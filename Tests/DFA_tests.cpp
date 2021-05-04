@@ -21,13 +21,13 @@ namespace DFA_tests {
         DFA dfa({exp});
         const std::vector<DFA::State> &states = dfa.getStates();
         const int start_state = 0, phi_state = 1, end_state = 2;
-        EXPECT_TRUE(states.size() == 3);// check that number of states is 3.
+        EXPECT_TRUE(states.size() == 3);
         EXPECT_TRUE(!states[start_state].isAcceptingState &&
                     !states[phi_state].isAcceptingState &&
                     states[end_state].isAcceptingState);// check that state 2 is accepting state and state 1, 0 are not.
         EXPECT_TRUE(states[end_state].regEXP == exp.getName());
-        // check that start state go to state 2 under input 'a' only and go to phi state for other inputs.
-        // check that state 1, 2 go to state 1 under all inputs.
+        //  All states point to the phi state under all inputs with the exception of the starting state pointing
+        //  to the end state under input DEFAULT_CHAR.
         for (char c = 1; c < CHAR_MAX; ++c) {
             if (c != DEFAULT_CHAR) {
                 EXPECT_TRUE(states[start_state].transitions.at(c) == phi_state);
@@ -58,7 +58,8 @@ namespace DFA_tests {
         //          0           2            3          4
         // phi_state is state number 1.
         // all states go to phi_state for any input other than the above.
-        // state 3 is ending state for 'aa' and 'a*' but its regular expression is aa because it has higher priority.
+        // state 3 is ending state for 'aa' and 'a*' but its regular expression is aa
+        // because it has higher priority(i.e earlier in the input file).
         const std::vector<DFA::State> &states = dfa.getStates();
         constexpr int num_states = 5;
         EXPECT_TRUE(states.size() == num_states);
