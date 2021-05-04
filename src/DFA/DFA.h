@@ -7,14 +7,10 @@
 
 #include <map>
 #include <vector>
+#include <climits>
+
 #include "../Parser/RegularExpression.h"
 #include "../NFA/NFA.h"
-
-struct Token {
-    std::string regEXP;
-    std::string match_string;
-};
-
 
 class DFA {
 public:
@@ -33,14 +29,9 @@ public:
 
     const std::vector<State> &getStates() const;
 
-    void set_input_stream(std::string input_stream);// open l file and store it in string;
-    Token get_next_token();
-
 private:
 
     std::vector<State> states;
-    std::string file_stream;
-    int cursor;
 
     void minimize_DFA();
     std::vector<int> classify();
