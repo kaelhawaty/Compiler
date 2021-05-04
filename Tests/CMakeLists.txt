@@ -20,11 +20,11 @@ add_executable(Tests
         ../src/Parser/ComponentParser.h
         ../src/Parser/RegularExpression.h
         ../src/Parser/Component.h
-        Parser_tests.cpp
+        LexicalParser_tests.cpp
         ../src/Parser/InputParser.h
         ../src/Parser/InputParser.cpp
-        ../src/Parser/Parser.h
-        ../src/Parser/Parser.cpp
+        ../src/Parser/LexicalParser.h
+        ../src/Parser/LexicalParser.cpp
         ../src/Parser/Utils/ParserUtils.h
         ../src/Parser/Utils/ParserUtils.cpp
         InputParser_tests.cpp
