@@ -45,7 +45,6 @@ DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
  * the regular expression with minimal priority, i.e the earliest regular expression.
  */
 void DFA::set_if_accepting_state(DFA::State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs) {
-    std::string regEXP;
     int priority = INT_MAX;
     for (const auto &regEXP : regEXPs) {
         if (!set.count(regEXP.getNFA().get_end())) {
@@ -59,13 +58,6 @@ void DFA::set_if_accepting_state(DFA::State &state, const NFA::Set &set, const s
     }
 }
 
-void DFA::set_input_stream(std::string input_stream) {
-
-}
-
-Token DFA::get_next_token() {
-    return Token();
-}
 
 void DFA::minimize_DFA() {
 
@@ -74,4 +66,3 @@ void DFA::minimize_DFA() {
 const std::vector<DFA::State> &DFA::getStates() const {
     return states;
 }
-
