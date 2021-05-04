@@ -43,7 +43,8 @@ private:
     int cursor;
 
     void minimize_DFA();
-    std::vector<int> acceptingRegExpClassify();
+    std::vector<int> classify();
+    std::vector<int> init_classify();
     void reClassify(std::vector<int>& statesClasses);
     std::vector<int> transformTransitions(const std::vector<int> &transitions,
                                           const std::vector<int> &statesClasses);

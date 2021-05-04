@@ -77,26 +77,35 @@ void DFA::set_if_accepting_state(DFA::State &state, const NFA::Set &set, const s
 }
 
 void DFA::minimize_DFA() {
-    std::vector<int> statesClasses = acceptingRegExpClassify();
-    reClassify(statesClasses);
+    std::vector<int> statesClasses = classify();
     std::vector<State> newStates;
-    //add first state of every class to newStates
+    //Add first state of every class to newStates.
     for(int i=0 ; i< states.size() ;i++){
-        /* this condition means that this is the first state of class statesClasses[i]
-         *first state of different classes are ordered */
+        // This condition means that this is the first state of class statesClasses[i].
+        // First state of different classes are ordered.
         if(statesClasses[i] == newStates.size()){
-            newStates.emplace_back(states[i]);
+            newStates.emplace_back(std::move(states[i]));
             newStates.back().id = statesClasses[i];
-            newStates.back().transitions = transformTransitions(states[i].transitions,statesClasses);
+            newStates.back().transitions = transformTransitions(newStates.back().transitions,statesClasses);
         }
     }
     states = std::move(newStates);
 }
 
-//Initial classification based on accepting regular expiration
-std::vector<int> DFA::acceptingRegExpClassify() {
-    // 0 class for not accepting state.
-    // positive class for accepting a certain regular expiration
+std::vector<int> DFA::classify() {
+    std::vector<int> statesClasses = init_classify();
+    reClassify(statesClasses);
+    return statesClasses;
+}
+
+/**
+ * Initially, we partition the states into two partitions based on if the state is accepting. Then, we further subdivide
+ * the accepting states into partitions that accept the same regular expressions since no two states accepting different
+ * regular expressions can be merged (Proof by contradiction).
+ */
+std::vector<int> DFA::init_classify() {
+    // Class 0 is for not accepting states.
+    // Positive classes are for accepting different regular expression.
     int nextClass = 1;
     std::unordered_map<std::string,int> regExpClass;
     std::vector<int> stateClass(states.size());
@@ -115,7 +124,15 @@ std::vector<int> DFA::acceptingRegExpClassify() {
     return stateClass;
 }
 
-// do iterations on classes of the states until no more classification needed
+/**
+ * The state-minimization algorithm works by partitioning the states of a DFA
+ * into groups of states that cannot be distinguished i.e two states s and t
+ * are in the same subgroup if and only if for all input symbols a, states s
+ * and t have transitions on a to states in the same group. Each group of
+ * states is then merged into a single state of the minimum-state DFA. When
+ * the partition cannot be refined further by breaking any group into smaller
+ * groups, we have the minimum-state DFA.
+*/
 void DFA::reClassify(std::vector<int> &statesClasses) {
     std::vector<int> newStatesClasses(states.size());
     do{
@@ -135,10 +152,10 @@ void DFA::reClassify(std::vector<int> &statesClasses) {
     }while (statesClasses != newStatesClasses);
 }
 
-// map each state in vector transitions to its corresponding class
+// Map each state in vector transitions to its corresponding class.
 std::vector<int> DFA::transformTransitions(const std::vector<int> &transitions, const std::vector<int> &statesClasses) {
     std::vector<int> transitionClass(CHAR_MAX);
-    for(char c = 1 ; c < CHAR_MAX ; c++)
+    for(char c = 0 ; c < CHAR_MAX ; c++)
         transitionClass[c] = statesClasses[transitions[c] ];
     return transitionClass;
 }
