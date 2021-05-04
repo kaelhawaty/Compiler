@@ -10,10 +10,6 @@
 #include "InputParser.h"
 #include "ComponentParser.h"
 
-#define INIT_STATE 0
-#define FAILURE 0
-
-
 LexicalParser::LexicalParser(const std::string &inputFilePath) : dfa(parse(inputFilePath)) {}
 
 /**
@@ -69,7 +65,7 @@ bool LexicalParser::get_next_token(Token &token) {
 int LexicalParser::get_next_line() {
     // Make sure that there's an open file to read from.
     if (!this->file_stream.is_open()) {
-        return FAILURE;
+        return 0;
     }
     std::string line;
     if (getline(this->file_stream, line)) {
@@ -81,9 +77,8 @@ int LexicalParser::get_next_line() {
         for (const auto &word: words) {
             performMaximalMunch(word);
         }
-        return this->tokenBuffer.size();
-    } else
-        return FAILURE;
+    }
+    return this->tokenBuffer.size();
 }
 
 void LexicalParser::performMaximalMunch(const std::string &word) {
@@ -95,7 +90,8 @@ void LexicalParser::performMaximalMunch(const std::string &word) {
 
     const std::vector<DFA::State> &states = this->dfa.getStates();
     while (index < word.length()) {
-        const DFA::State *state = &states.at(INIT_STATE);
+        // Assuming that initial state is 0
+        const DFA::State *state = &states.at(0);
         for (int i = index; i < word.length(); i++) {
             state = &states.at(state->transitions.at(word[i]));
             if (state->isAcceptingState) {
