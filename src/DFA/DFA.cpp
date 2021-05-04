@@ -4,6 +4,23 @@
 
 #include "DFA.h"
 
+namespace std
+{
+    template<> struct hash<vector<int>>
+    {
+        int operator()(const std::vector<int> &V) const {
+            int hash = V.size();
+            for(auto &i : V) {
+                hash ^= i + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            }
+            return hash;
+        }
+    };
+}
+
+const std::vector<DFA::State> &DFA::getStates() const {
+    return states;
+}
 
 DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
     std::queue<NFA::Set> unmarked_states;
@@ -58,11 +75,86 @@ void DFA::set_if_accepting_state(DFA::State &state, const NFA::Set &set, const s
     }
 }
 
-
 void DFA::minimize_DFA() {
-
+    std::vector<int> statesClasses = classify();
+    std::vector<State> newStates;
+    //Add first state of every class to newStates.
+    for(int i=0 ; i< states.size() ;i++){
+        // This condition means that this is the first state of class statesClasses[i].
+        // First state of different classes are ordered.
+        if(statesClasses[i] == newStates.size()){
+            newStates.emplace_back(std::move(states[i]));
+            newStates.back().id = statesClasses[i];
+            newStates.back().transitions = transformTransitions(newStates.back().transitions,statesClasses);
+        }
+    }
+    states = std::move(newStates);
 }
 
-const std::vector<DFA::State> &DFA::getStates() const {
-    return states;
+std::vector<int> DFA::classify() {
+    std::vector<int> statesClasses = init_classify();
+    reClassify(statesClasses);
+    return statesClasses;
+}
+
+/**
+ * Initially, we partition the states into two partitions based on if the state is accepting. Then, we further subdivide
+ * the accepting states into partitions that accept the same regular expressions since no two states accepting different
+ * regular expressions can be merged (Proof by contradiction).
+ */
+std::vector<int> DFA::init_classify() {
+    // Class 0 is for not accepting states.
+    // Positive classes are for accepting different regular expression.
+    int nextClass = 1;
+    std::unordered_map<std::string,int> regExpClass;
+    std::vector<int> stateClass(states.size());
+
+    for(int i = 0 ; i< states.size() ; i++){
+        if(states[i].isAcceptingState){
+            if(regExpClass.find(states[i].regEXP) == regExpClass.end()){
+                regExpClass[states[i].regEXP] = nextClass;
+                nextClass++;
+            }
+            stateClass[i] = regExpClass[states[i].regEXP];
+        }else{
+            stateClass[i] = 0;
+        }
+    }
+    return stateClass;
+}
+
+/**
+ * The state-minimization algorithm works by partitioning the states of a DFA
+ * into groups of states that cannot be distinguished i.e two states s and t
+ * are in the same subgroup if and only if for all input symbols a, states s
+ * and t have transitions on a to states in the same group. Each group of
+ * states is then merged into a single state of the minimum-state DFA. When
+ * the partition cannot be refined further by breaking any group into smaller
+ * groups, we have the minimum-state DFA.
+*/
+void DFA::reClassify(std::vector<int> &statesClasses) {
+    std::vector<int> newStatesClasses(states.size());
+    do{
+        int nextClass = 0;
+        std::unordered_map<std::vector<int>,int> transitionsClasses;
+
+        for(int i = 0 ; i< states.size() ; i++){
+            std::vector<int> transitionClass = transformTransitions(states[i].transitions,statesClasses);
+            if(transitionsClasses.count(transitionClass) == 0){
+                transitionsClasses[transitionClass] = nextClass;
+                nextClass++;
+            }
+            newStatesClasses[i] = transitionsClasses[transitionClass];
+        }
+
+        swap(statesClasses,newStatesClasses);
+    }while (statesClasses != newStatesClasses);
+}
+
+// Map each state in vector transitions to its corresponding class.
+std::vector<int> DFA::transformTransitions(const std::vector<int> &transitions, const std::vector<int> &statesClasses) {
+    std::vector<int> transitionClass(CHAR_MAX);
+    for(char c = 0 ; c < CHAR_MAX ; c++)
+        transitionClass[c] = statesClasses[transitions[c] ];
+    return transitionClass;
 }

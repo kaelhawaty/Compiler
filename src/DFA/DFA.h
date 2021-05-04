@@ -34,6 +34,11 @@ private:
     std::vector<State> states;
 
     void minimize_DFA();
+    std::vector<int> classify();
+    std::vector<int> init_classify();
+    void reClassify(std::vector<int>& statesClasses);
+    std::vector<int> transformTransitions(const std::vector<int> &transitions,
+                                          const std::vector<int> &statesClasses);
 
     static void set_if_accepting_state(State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs);
 
