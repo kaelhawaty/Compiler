@@ -59,7 +59,7 @@ namespace DFA_tests {
         // phi_state is state number 1.
         // all states go to phi_state for any input other than the above.
         // state 3 is ending state for 'aa' and 'a*' but its regular expression is aa
-        // because it has higher priority(i.e earlier in the input file).
+        // because it has lower priority i.e earlier in the input file.
         const std::vector<DFA::State> &states = dfa.getStates();
         constexpr int num_states = 5;
         EXPECT_TRUE(states.size() == num_states);

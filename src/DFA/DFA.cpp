@@ -4,7 +4,7 @@
 
 #include "DFA.h"
 
-// Construct DFA from list of regular expressions.
+
 DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
     std::queue<NFA::Set> unmarked_states;
     // Maps a given set of NFA nodes to its corresponding DFA state ID.
@@ -20,12 +20,12 @@ DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
     states.emplace_back(state_id++);
     unmarked_states.push(start);
     while (!unmarked_states.empty()) {
-        auto top = unmarked_states.front();
+        auto current = std::move(unmarked_states.front());
         unmarked_states.pop();
-        int index = visited.at(top);
-        set_accepting_state(states[index], top, regEXPs);
+        int index = visited.at(current);
+        set_if_accepting_state(states[index], current, regEXPs);
         for (char c = 1; c < CHAR_MAX; ++c) {// start from 1 since 0 is reserved for EPSILON.
-            NFA::Set next = E_closure(Move(top, c));
+            NFA::Set next = E_closure(Move(current, c));
             if (!visited.count(next)) {
                 visited.insert({next, state_id});
                 states.emplace_back(state_id++);
@@ -44,7 +44,7 @@ DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
  * Sets the the DFA state to be an accepting state if it contains any accepting NFA nodes. If there are multiple, It picks
  * the regular expression with minimal priority, i.e the earliest regular expression.
  */
-void DFA::set_accepting_state(DFA::State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs) {
+void DFA::set_if_accepting_state(DFA::State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs) {
     std::string regEXP;
     int priority = INT_MAX;
     for (const auto &regEXP : regEXPs) {

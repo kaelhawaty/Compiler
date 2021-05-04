@@ -44,7 +44,7 @@ private:
 
     void minimize_DFA();
 
-    static void set_accepting_state(State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs);
+    static void set_if_accepting_state(State &state, const NFA::Set &set, const std::vector<RegularExpression> &regEXPs);
 
 };
 
