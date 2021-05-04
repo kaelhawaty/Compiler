@@ -4,20 +4,6 @@
 
 #include "DFA.h"
 
-namespace std
-{
-    template<> struct hash<vector<int>>
-    {
-        int operator()(const std::vector<int> &V) const {
-            int hash = V.size();
-            for(auto &i : V) {
-                hash ^= i + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            }
-            return hash;
-        }
-    };
-}
-
 const std::vector<DFA::State> &DFA::getStates() const {
     return states;
 }
@@ -136,15 +122,18 @@ void DFA::reClassify(std::vector<int> &statesClasses) {
     std::vector<int> newStatesClasses(states.size());
     do{
         int nextClass = 0;
-        std::unordered_map<std::vector<int>,int> transitionsClasses;
+        std::map<std::pair<std::vector<int>,int>,int> classes;
 
         for(int i = 0 ; i< states.size() ; i++){
-            std::vector<int> transitionClass = transformTransitions(states[i].transitions,statesClasses);
-            if(transitionsClasses.count(transitionClass) == 0){
-                transitionsClasses[transitionClass] = nextClass;
+            std::pair<std::vector<int>,int> key = {
+                    transformTransitions(states[i].transitions,statesClasses),
+                    statesClasses[i]
+            };
+            if(classes.count(key) == 0){
+                classes[key] = nextClass;
                 nextClass++;
             }
-            newStatesClasses[i] = transitionsClasses[transitionClass];
+            newStatesClasses[i] = classes[key];
         }
 
         swap(statesClasses,newStatesClasses);
