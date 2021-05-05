@@ -47,12 +47,12 @@ namespace NFA_test {
         return dfs(stA, stB, visitedA, visitedB);
     }
 
-    TEST(AreEqualTest, Identity) {
+    TEST(NFAAreEqualTest, Identity) {
         NFA nfa('a');
         EXPECT_TRUE(areEqual(nfa, nfa));
     }
 
-    TEST(AreEqualTest, DifferentTransitionEquality) {
+    TEST(NFAAreEqualTest, DifferentTransition) {
         NFA a('a');
         NFA b('b');
         EXPECT_FALSE(areEqual(a, b));
@@ -85,12 +85,7 @@ namespace NFA_test {
     }
 
     TEST(NFA_test, Concatenate) {
-        NFA a{'a'};
-        NFA b{'b'};
-
-        NFA_Builder builder{a};
-        builder.Concatenate(b);
-        NFA res = builder.build();
+        NFA res = NFA_Builder(NFA{'a'}).Concatenate('b').build();
         // res = * a * e * b *
         std::vector<std::shared_ptr<NFA::Node>> arrNodes(4);
         for (auto &arrNode : arrNodes) {
@@ -106,11 +101,7 @@ namespace NFA_test {
     }
 
     TEST(NFA_test, Or) {
-        NFA a{'a'};
-        NFA b{'b'};
-        NFA_Builder builder{a};
-        builder.Or(b);
-        NFA res = builder.build();
+        NFA res = NFA_Builder(NFA{'a'}).Or('b').build();
         /*    e * a * e
          *  *           *
          *    e * b * e
@@ -134,10 +125,7 @@ namespace NFA_test {
     }
 
     TEST(NFA_test, Positive_closure) {
-        NFA a{'a'};
-        NFA_Builder builder{a};
-        builder.Positive_closure();
-        NFA res = builder.build();
+        NFA res = NFA_Builder(NFA{'a'}).Positive_closure().build();
         /*        e
          *      /   \
          *  * e * a * e *
@@ -159,10 +147,7 @@ namespace NFA_test {
     }
 
     TEST(NFA_test, Kleene_closure) {
-        NFA a{'a'};
-        NFA_Builder builder{a};
-        builder.Kleene_closure();
-        NFA res = builder.build();
+        NFA res = NFA_Builder(NFA{'a'}).Kleene_closure().build();
         /*        e
          *    /   e    \
          *   /  /   \   \
@@ -201,16 +186,9 @@ namespace NFA_test {
 
     TEST(NFA_test, MatchesRegExp) {
         // aa (a | b) a*
-        NFA_Builder builder{NFA('a')};
-        builder.Concatenate(NFA('a'));
-        NFA_Builder OrBuilder{NFA('a')};
-        OrBuilder.Or(NFA('b'));
-        builder.Concatenate(OrBuilder.build());
-        NFA_Builder closureA(NFA('a'));
-        closureA.Kleene_closure();
-        builder.Concatenate(closureA.build());
-
-        NFA res = builder.build();
+        NFA Or = NFA_Builder().Concatenate('a').Or('b').build();
+        NFA closureA = NFA_Builder().Concatenate('a').Kleene_closure().build();
+        NFA res = NFA_Builder().Concatenate('a').Concatenate('a').Concatenate(Or).Concatenate(closureA).build();
         EXPECT_TRUE(MatchRegexp("aabaaaaa", res));
         EXPECT_TRUE(MatchRegexp("aaaaaaaa", res));
         EXPECT_TRUE(MatchRegexp("aaa", res));

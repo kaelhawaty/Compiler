@@ -20,19 +20,19 @@ LexicalParser::LexicalParser(const std::string &inputFilePath) : dfa(parse(input
 DFA LexicalParser::parse(const std::string &inputFilePath) {
     // Parsing Grammar file to have regular definitions.
     InputParser inputParser = InputParser(inputFilePath);
-    std::vector<std::pair<std::string, std::vector<component>>> regularDefinitionsComponents =
+    const std::vector<std::pair<std::string, std::vector<component>>> &regularDefinitionsComponents =
             inputParser.getRegularDefinitionsComponents();
     std::vector<std::string> regularExpressions = inputParser.getRegularExpressions();
 
     // Mapping regular definitions to NFA.
     ComponentParser componentParser;
-    std::unordered_map<std::string, NFA> regDefToNFA = componentParser.regDefinitionsToNFAs(
+    const std::unordered_map<std::string, NFA> &regDefToNFA = componentParser.regDefinitionsToNFAs(
             regularDefinitionsComponents);
 
     std::vector<RegularExpression> results;
     int order = 1;
     for (std::string &regExp: regularExpressions) {
-        results.emplace_back(regExp, order++, regDefToNFA[regExp]);
+        results.emplace_back(regExp, order++, regDefToNFA.at(regExp));
     }
 
     // Mapping NFA to DFA
@@ -100,9 +100,10 @@ void LexicalParser::performMaximalMunch(const std::string &word) {
                 lastAcceptingState = state->id;
             }
         }
-        if (lastAcceptingIndex == -1) {
+        if (lastAcceptingIndex < index) {
+            // Error Recovery: In the panic mode, the successive characters are always ignored until
+            // we reach a well-formed token.
             std::cerr << "Error in line " << line_number << " :" << word.substr(index) << " Couldn't match\n";
-            // skip the first char, and try again from word[index + 1].
             index++;
             continue;
         }

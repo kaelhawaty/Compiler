@@ -18,20 +18,20 @@ const char EPSILON = 0;
 class NFA {
 
 public:
-    /*
+    /**
      * Constructs an NFA that accepts any string which is simply two
      * nodes connected by EPSILON edge.
      */
     NFA();
 
-    /*
+    /**
      * Constructs an NFA that accepts a string consisting of a single char.
      */
     explicit NFA(char c);
 
     class Node;
 
-    /*
+    /**
      * Constructs an NFA given the start and ending pointers of the NFA.
      * Note that the end state is considered to be the accepting state.
      */
@@ -45,7 +45,7 @@ public:
 
     NFA &operator=(NFA &&rhs) noexcept;
 
-    /*
+    /**
      * Simple set of Nodes/States of the NFA which we define operations such as
      * Move, E_closure on, see below.
      */
@@ -93,14 +93,14 @@ private:
 
 };
 
-/*
+/**
  * Given a set of Nodes/States of the NFA, It returns ε-closure of that set
  * i.e adds to the set all the states that are connected to this set of states
  * with ε edges.
  */
 NFA::Set E_closure(const NFA::Set &states);
 
-/*
+/**
  * Given a set of Nodes/States of the NFA, it moves every state in this set
  * according to the transition character c. Note that this function doesn't call
  * ε-closure after moving the state. If needed, follow it by a call to ε-closure.
