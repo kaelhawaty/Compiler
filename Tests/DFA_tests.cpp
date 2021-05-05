@@ -292,7 +292,6 @@ namespace DFA_tests {
         expected[1].transitions['c'] = 0;
         expected[1].transitions['d'] = 1;
 
-
         EXPECT_TRUE(areEqual(dfa.getStates(), expected));
     }
 }
