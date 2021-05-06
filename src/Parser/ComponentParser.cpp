@@ -12,14 +12,15 @@ using namespace std;
 /**
  * Gets the top element of a stack pop it from a stack.
  */
-template<typename t>
-t poll(std::stack<t>& st) {
+template<typename T>
+T poll(std::stack<T> &st) {
     if (!st.empty()) {
-        t top = std::move(st.top());
+        T top = std::move(st.top());
         st.pop();
         return top;
     }
-    throw logic_error("Stack is empty, internal Error");
+    // This means that there is a formatting error in the rules file.
+    throw logic_error("Stack is empty, Format error");
 }
 
 
@@ -35,7 +36,7 @@ const std::unordered_map<std::string, NFA>& ComponentParser::regDefinitionsToNFA
     for (const auto& [regularDefinition, components] : regDefinitions) {
         // If the case is a single char.
         try {
-            if (components.size() == 1)
+            if (components.size() == 1 && components[0].regularDefinition.size() == 1)
                 this->regToNFA[regularDefinition] = ComponentParser::CharToNFA(components[0]);
             else
                 this->regToNFA[regularDefinition] = this->SingleRegDefToNFA(components);
@@ -73,6 +74,8 @@ NFA ComponentParser::SingleRegDefToNFA(const std::vector<component>& components)
             NFABuilders.push(addExpressionInBrackets(components, &i));
         }
         else if (comp.type == REG_EXP || comp.type == RED_DEF) {
+            if (regToNFA.find(comp.regularDefinition) == regToNFA.end())
+                throw logic_error(comp.regularDefinition + " Was not seen before.");
             NFABuilders.push(NFA_Builder(regToNFA[comp.regularDefinition]));
         }
         // Apply a binary operation based on the precedence.
@@ -135,9 +138,12 @@ NFA_Builder ComponentParser::applyBinaryOperation(const component_type type, NFA
 
 NFA_Builder ComponentParser::applyToOperation(const component& c1, const component& c2) {
     // Assumption that 'TO' operation takes only rhs char, and lhs char.
+    if (c1.regularDefinition.size() != 1 && c2.regularDefinition.size() != 1) {
+        throw logic_error("Check '-' syntax, Just use one char at each end\"eg: a-z\"");
+    }
     char first = c1.regularDefinition[0];
     char second = c2.regularDefinition[0];
-    if (second - first < 0) throw logic_error("Check '-' syntax, You can use a-z not z-a");
+    if (second - first < 0) throw logic_error("Check '-' syntax, eg: You can use a-z not z-a");
     NFA_Builder nfa_builder((NFA(first)));
     while (++first <= second) {
         nfa_builder.Or(NFA (first));
