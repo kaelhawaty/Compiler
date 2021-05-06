@@ -5,6 +5,15 @@
 
 namespace NFA_test {
 
+    /**
+     * Note that this function tests the equality of two NFA by their deterministic
+     * behavior and not by strict equality of NFA graphs as this is what we require
+     * from two different NFA.
+     *
+     * In case of a need for strict equality, we would need to assign every node in
+     * a transition to the corresponding node in the other graph by trying out all of
+     * the permutation. For our case, two NFAs are equal if they behave the same.
+     */
     bool dfs(NFA::Set a, NFA::Set b, std::map<NFA::Set, NFA::Set> &visited) {
         const int is_visited_a = visited.count(a);
         const int is_visited_b = visited.count(b);
