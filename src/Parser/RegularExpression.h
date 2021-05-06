@@ -17,7 +17,7 @@ private:
     NFA nfa;
 
 public:
-    RegularExpression(const std::string &name, int priority, NFA &nfa) : name(name),
+    RegularExpression(const std::string &name, int priority, const NFA &nfa) : name(name),
                                                                          priority(priority),
                                                                          nfa(nfa) {}
 

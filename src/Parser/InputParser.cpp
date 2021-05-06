@@ -18,8 +18,12 @@ const std::vector<std::pair<std::string, std::vector<component>>>& InputParser::
     return this->regularDefinitionsComponents;
 }
 
-const std::vector<std::string>& InputParser::getRegularExpressions() {
-    return this->regularExpressionsNames;
+std::vector<std::string> InputParser::getRegularExpressions() {
+    std::vector<std::string> allNames;
+    allNames.insert(allNames.end(), this->keywordsNames.begin(), this->keywordsNames.end());
+    allNames.insert(allNames.end(), this->punctuationsNames.begin(), this->punctuationsNames.end());
+    allNames.insert(allNames.end(), this->regularExpressionsNames.begin(), this->regularExpressionsNames.end());
+    return allNames;
 }
 
 std::vector<std::string> InputParser::readInputFile(const std::string& inputFilePath) {
@@ -61,11 +65,11 @@ void InputParser::parseLine(std::string s) {
 
 
         std::string name = s.substr(0,ind);
+        name = trim(name);
         if (s[ind] == ':')
             this->regularExpressionsNames.emplace_back(name);
 
         std::string expression = s.substr(ind+1);
-        name = trim(name);
         expression = trim(expression);
         addRegularDefinition(name,expression);
     }
@@ -93,7 +97,7 @@ void InputParser::addPunctuations(const std::string& s) {
             punctuation =s[i];
         }
         addSingleChar(punctuation);
-        this->regularExpressionsNames.emplace_back(std::string{punctuation});
+        this->punctuationsNames.emplace_back(std::string{punctuation});
     }
 
 }
@@ -106,7 +110,7 @@ void InputParser::addKeywords(const std::string& s) {
         std::string keywordWithSpaces = addSpacesBetweenChars(keyword);
 
         addRegularDefinition(keyword,keywordWithSpaces);
-        this->regularExpressionsNames.emplace_back(keyword);
+        this->keywordsNames.emplace_back(keyword);
     }
 
 }
@@ -135,7 +139,7 @@ std::vector<component> InputParser::getComponents(const std::string& s) {
                         j+=1;
                     }
                 }
-                //here we check if this regular definition exists, otherwise we split it into letters
+                // Here we check if this regular definition exists, otherwise we split it into letters.
                 if(this->regularDefinitionsNames.count(name)){
                     components.emplace_back(type,name);
                 }else{

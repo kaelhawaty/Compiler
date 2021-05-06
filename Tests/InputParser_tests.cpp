@@ -13,9 +13,8 @@ namespace InputParser_tests{
                                                              inputParser.getRegularDefinitionsComponents();
         std::vector<std::string> regularExpressions = inputParser.getRegularExpressions();
 
-        std::vector<std::string> expectedRegExp
-                {"id", "boolean", "int", "float", "num", "relop", "assign", "if", "else", "while",
-                 ";", ",", "(", ")", "{", "}", "addop", "mulop"};
+        std::vector<std::string> expectedRegExp{"boolean", "int", "float", "if", "else", "while", ";", ",", "(", ")",
+                                                "{", "}", "id", "num", "relop", "assign", "addop", "mulop"};
 
         EXPECT_TRUE(regularExpressions == expectedRegExp);
 

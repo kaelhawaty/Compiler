@@ -41,9 +41,10 @@ DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
     for (auto &state : states) {
         state.transitions[0] = empty_set_index;
     }
+    this->minimize_DFA();
 }
 
-/*
+/**
  * Sets the the DFA state to be an accepting state if it contains any accepting NFA nodes. If there are multiple, It picks
  * the regular expression with minimal priority, i.e the earliest regular expression.
  */
@@ -140,10 +141,12 @@ void DFA::reClassify(std::vector<int> &statesClasses) {
     }while (statesClasses != newStatesClasses);
 }
 
-// Map each state in vector transitions to its corresponding class.
+/**
+ * Maps each state in vector transitions to its corresponding class.
+ */
 std::vector<int> DFA::transformTransitions(const std::vector<int> &transitions, const std::vector<int> &statesClasses) {
     std::vector<int> transitionClass(CHAR_MAX);
     for(char c = 0 ; c < CHAR_MAX ; c++)
-        transitionClass[c] = statesClasses[transitions[c] ];
+        transitionClass[c] = statesClasses[transitions[c]];
     return transitionClass;
 }

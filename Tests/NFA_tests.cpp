@@ -5,54 +5,44 @@
 
 namespace NFA_test {
 
-    bool dfs(NFA::Set a, NFA::Set b, std::unordered_set<const NFA::Node *> &visitedA,
-             std::unordered_set<const NFA::Node *> &visitedB) {
-        if (a.size() != b.size()) {
+    /**
+     * Note that this function tests the equality of two NFA by their deterministic
+     * behavior and not by strict equality of NFA graphs as this is what we require
+     * from two different NFA.
+     *
+     * In case of a need for strict equality, we would need to assign every node in
+     * a transition to the corresponding node in the other graph by trying out all of
+     * the permutation. For our case, two NFAs are equal if they behave the same.
+     */
+    bool dfs(NFA::Set a, NFA::Set b, std::map<NFA::Set, NFA::Set> &visited) {
+        const int is_visited_a = visited.count(a);
+        const int is_visited_b = visited.count(b);
+        if(is_visited_a != is_visited_b){
             return false;
         }
-        if (a.size() == 0) {
-            return true;
+        if (is_visited_a) {
+            return visited[a] == b;
         }
-        for (auto it = a.begin(); it != a.end();) {
-            if (visitedA.count(*it)) {
-                it = a.erase(it);
-            } else {
-                visitedA.insert(*it);
-                it++;
-            }
-        }
-        for (auto it = b.begin(); it != b.end();) {
-            if (visitedB.count(*it)) {
-                it = b.erase(it);
-            } else {
-                visitedB.insert(*it);
-                it++;
-            }
-        }
-        if (a.size() != b.size()) {
-            return false;
-        }
+        visited[a] = b;
+        visited[b] = a;
         bool ans = true;
         for (char c = 0; c < CHAR_MAX && ans; c++) {
-            ans = ans && dfs(Move(a, c), Move(b, c), visitedA, visitedB);
+            ans = ans && dfs(Move(a, c), Move(b, c), visited);
         }
         return ans;
     }
 
     bool areEqual(const NFA &a, const NFA &b) {
-        NFA::Set stA{a.get_start()};
-        NFA::Set stB{b.get_start()};
-        std::unordered_set<const NFA::Node *> visitedA;
-        std::unordered_set<const NFA::Node *> visitedB;
-        return dfs(stA, stB, visitedA, visitedB);
+        std::map<NFA::Set, NFA::Set> visited;
+        return dfs(NFA::Set{a.get_start()}, NFA::Set{b.get_start()}, visited);
     }
 
-    TEST(AreEqualTest, Identity) {
+    TEST(NFAAreEqualTest, Identity) {
         NFA nfa('a');
         EXPECT_TRUE(areEqual(nfa, nfa));
     }
 
-    TEST(AreEqualTest, DifferentTransitionEquality) {
+    TEST(NFAAreEqualTest, DifferentTransition) {
         NFA a('a');
         NFA b('b');
         EXPECT_FALSE(areEqual(a, b));
@@ -85,12 +75,7 @@ namespace NFA_test {
     }
 
     TEST(NFA_test, Concatenate) {
-        NFA a{'a'};
-        NFA b{'b'};
-
-        NFA_Builder builder{a};
-        builder.Concatenate(b);
-        NFA res = builder.build();
+        NFA res = NFA_Builder(NFA{'a'}).Concatenate('b').build();
         // res = * a * e * b *
         std::vector<std::shared_ptr<NFA::Node>> arrNodes(4);
         for (auto &arrNode : arrNodes) {
@@ -106,11 +91,7 @@ namespace NFA_test {
     }
 
     TEST(NFA_test, Or) {
-        NFA a{'a'};
-        NFA b{'b'};
-        NFA_Builder builder{a};
-        builder.Or(b);
-        NFA res = builder.build();
+        NFA res = NFA_Builder(NFA{'a'}).Or('b').build();
         /*    e * a * e
          *  *           *
          *    e * b * e
@@ -134,10 +115,7 @@ namespace NFA_test {
     }
 
     TEST(NFA_test, Positive_closure) {
-        NFA a{'a'};
-        NFA_Builder builder{a};
-        builder.Positive_closure();
-        NFA res = builder.build();
+        NFA res = NFA_Builder(NFA{'a'}).Positive_closure().build();
         /*        e
          *      /   \
          *  * e * a * e *
@@ -159,10 +137,7 @@ namespace NFA_test {
     }
 
     TEST(NFA_test, Kleene_closure) {
-        NFA a{'a'};
-        NFA_Builder builder{a};
-        builder.Kleene_closure();
-        NFA res = builder.build();
+        NFA res = NFA_Builder(NFA{'a'}).Kleene_closure().build();
         /*        e
          *    /   e    \
          *   /  /   \   \
@@ -201,16 +176,9 @@ namespace NFA_test {
 
     TEST(NFA_test, MatchesRegExp) {
         // aa (a | b) a*
-        NFA_Builder builder{NFA('a')};
-        builder.Concatenate(NFA('a'));
-        NFA_Builder OrBuilder{NFA('a')};
-        OrBuilder.Or(NFA('b'));
-        builder.Concatenate(OrBuilder.build());
-        NFA_Builder closureA(NFA('a'));
-        closureA.Kleene_closure();
-        builder.Concatenate(closureA.build());
-
-        NFA res = builder.build();
+        NFA Or = NFA_Builder().Concatenate('a').Or('b').build();
+        NFA closureA = NFA_Builder().Concatenate('a').Kleene_closure().build();
+        NFA res = NFA_Builder().Concatenate('a').Concatenate('a').Concatenate(Or).Concatenate(closureA).build();
         EXPECT_TRUE(MatchRegexp("aabaaaaa", res));
         EXPECT_TRUE(MatchRegexp("aaaaaaaa", res));
         EXPECT_TRUE(MatchRegexp("aaa", res));
