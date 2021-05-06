@@ -17,11 +17,14 @@ public:
 
     const std::vector<std::pair<std::string, std::vector<component>>> &getRegularDefinitionsComponents();
 
-    const std::vector<std::string> &getRegularExpressions();
+    std::vector<std::string> getRegularExpressions();
 
 private:
 
     std::vector<std::string> regularExpressionsNames;
+    std::vector<std::string> keywordsNames;
+    std::vector<std::string> punctuationsNames;
+
     std::vector<std::pair<std::string, std::vector<component>>> regularDefinitionsComponents;
     std::unordered_set<std::string> regularDefinitionsNames;
 

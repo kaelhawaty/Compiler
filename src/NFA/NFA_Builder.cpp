@@ -18,6 +18,10 @@ NFA_Builder &NFA_Builder::Concatenate(NFA rhs) {
     return *this;
 }
 
+NFA_Builder &NFA_Builder::Concatenate(const char c) {
+    return Concatenate(NFA{c});
+}
+
 NFA_Builder &NFA_Builder::Or(NFA rhs) {
     auto new_start{std::make_shared<NFA::Node>()};
     auto new_end{std::make_shared<NFA::Node>()};
@@ -29,6 +33,10 @@ NFA_Builder &NFA_Builder::Or(NFA rhs) {
     nfa.start = std::move(new_start);
     nfa.end = std::move(new_end);
     return *this;
+}
+
+NFA_Builder &NFA_Builder::Or(const char c) {
+    return Or(NFA{c});
 }
 
 NFA_Builder &NFA_Builder::Positive_closure() {
@@ -49,7 +57,7 @@ NFA_Builder &NFA_Builder::Kleene_closure() {
     return *this;
 }
 
-/*
+/**
  * Note after calling this function, the builder object becomes unusable.
  * Since the NFA is moved out of the builder class.
  */
