@@ -82,18 +82,22 @@ namespace DFA_tests {
     }
 
     bool dfs(int nodeA, int nodeB, const std::vector<DFA::State> &a, const std::vector<DFA::State> &b,
-             std::unordered_set<const DFA::State *> &visited) {
+             std::unordered_map<const DFA::State *, const DFA::State *> &visited) {
         const DFA::State *a_ptr = &a[nodeA];
         const DFA::State *b_ptr = &b[nodeB];
-        if (visited.count(a_ptr) ^ visited.count(b_ptr) || a_ptr->isAcceptingState != b_ptr->isAcceptingState ||
-            a_ptr->regEXP != b_ptr->regEXP) {
+        int is_visited_a = visited.count(a_ptr);
+        int is_visited_b = visited.count(b_ptr);
+        if(is_visited_a != is_visited_b){
             return false;
         }
-        if (visited.count(a_ptr)) {
-            return true;
+        if (is_visited_a) {
+            return visited[a_ptr] == b_ptr;
         }
-        visited.insert(a_ptr);
-        visited.insert(b_ptr);
+        if (a_ptr->isAcceptingState != b_ptr->isAcceptingState || a_ptr->regEXP != b_ptr->regEXP) {
+            return false;
+        }
+        visited[a_ptr] = b_ptr;
+        visited[b_ptr] = a_ptr;
         bool ans = true;
         for (char c = 0; c < CHAR_MAX && ans; c++) {
             ans = ans && dfs(a[nodeA].transitions[c], b[nodeB].transitions[c], a, b, visited);
@@ -102,7 +106,7 @@ namespace DFA_tests {
     }
 
     bool areEqual(const std::vector<DFA::State> &a, const std::vector<DFA::State> &b) {
-        std::unordered_set<const DFA::State *> visited;
+        std::unordered_map<const DFA::State *, const DFA::State *> visited;
         return dfs(0, 0, a, b, visited);
     }
 
@@ -166,8 +170,16 @@ namespace DFA_tests {
 
         EXPECT_FALSE(areEqual(actual, expected));
 
-        // Reset previous change and check that they are equal after reverting changes.
+        // Reset previous change and check that if a transition point to an already "visited"
+        // but a wrong state that it should be detected.
         actual[4].regEXP = "default";
+        old_val = actual[1].transitions['c'];
+        actual[1].transitions['c'] = 1;
+
+        EXPECT_FALSE(areEqual(actual, expected));
+
+        // Reset previous change and check that after all changes they are equal.
+        actual[1].transitions['c'] = old_val;
 
         EXPECT_TRUE(areEqual(actual, expected));
     }

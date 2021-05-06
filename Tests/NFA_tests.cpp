@@ -5,46 +5,27 @@
 
 namespace NFA_test {
 
-    bool dfs(NFA::Set a, NFA::Set b, std::unordered_set<const NFA::Node *> &visitedA,
-             std::unordered_set<const NFA::Node *> &visitedB) {
-        if (a.size() != b.size()) {
+    bool dfs(NFA::Set a, NFA::Set b, std::map<NFA::Set, NFA::Set> &visited) {
+        const int is_visited_a = visited.count(a);
+        const int is_visited_b = visited.count(b);
+        if(is_visited_a != is_visited_b){
             return false;
         }
-        if (a.size() == 0) {
-            return true;
+        if (is_visited_a) {
+            return visited[a] == b;
         }
-        for (auto it = a.begin(); it != a.end();) {
-            if (visitedA.count(*it)) {
-                it = a.erase(it);
-            } else {
-                visitedA.insert(*it);
-                it++;
-            }
-        }
-        for (auto it = b.begin(); it != b.end();) {
-            if (visitedB.count(*it)) {
-                it = b.erase(it);
-            } else {
-                visitedB.insert(*it);
-                it++;
-            }
-        }
-        if (a.size() != b.size()) {
-            return false;
-        }
+        visited[a] = b;
+        visited[b] = a;
         bool ans = true;
         for (char c = 0; c < CHAR_MAX && ans; c++) {
-            ans = ans && dfs(Move(a, c), Move(b, c), visitedA, visitedB);
+            ans = ans && dfs(Move(a, c), Move(b, c), visited);
         }
         return ans;
     }
 
     bool areEqual(const NFA &a, const NFA &b) {
-        NFA::Set stA{a.get_start()};
-        NFA::Set stB{b.get_start()};
-        std::unordered_set<const NFA::Node *> visitedA;
-        std::unordered_set<const NFA::Node *> visitedB;
-        return dfs(stA, stB, visitedA, visitedB);
+        std::map<NFA::Set, NFA::Set> visited;
+        return dfs(NFA::Set{a.get_start()}, NFA::Set{b.get_start()}, visited);
     }
 
     TEST(NFAAreEqualTest, Identity) {
