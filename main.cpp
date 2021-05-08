@@ -13,6 +13,10 @@ int main(int argc, char *argv[])
     }
     std::string rulesPath{argv[1]};
     LexicalParser lexicalParser(rulesPath);
+    if (lexicalParser.has_grammar_error()) {
+        std::cerr << "Error: Couldn't Parse Grammar file correctly" << "\n";
+        return 0;
+    }
     std::string programPath{argv[2]};
     lexicalParser.set_input_stream(programPath);
     Token token;

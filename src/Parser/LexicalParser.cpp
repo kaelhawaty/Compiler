@@ -26,13 +26,22 @@ DFA LexicalParser::parse(const std::string &inputFilePath) {
 
     // Mapping regular definitions to NFA.
     ComponentParser componentParser;
-    const std::unordered_map<std::string, NFA> &regDefToNFA = componentParser.regDefinitionsToNFAs(
+    const std::unordered_map<std::string, NFA> &regularDefinitionToNFA = componentParser.regDefinitionsToNFAs(
             regularDefinitionsComponents);
 
+    // Assuming no error had occurred till now.
+    this->grammar_parsing_error = false;
     std::vector<RegularExpression> results;
     int order = 1;
     for (std::string &regExp: regularExpressions) {
-        results.emplace_back(regExp, order++, regDefToNFA.at(regExp));
+        if (regularDefinitionToNFA.find(regExp) != regularDefinitionToNFA.end()) {
+            results.emplace_back(regExp, order++, regularDefinitionToNFA.at(regExp));
+        }
+        else {
+            // Having Grammar error means that the line correspond to regExp is not parsed correctly,
+            // So we just skip it.
+            this->grammar_parsing_error = true;
+        }
     }
 
     // Mapping NFA to DFA
@@ -42,6 +51,13 @@ DFA LexicalParser::parse(const std::string &inputFilePath) {
 void LexicalParser::set_input_stream(const std::string &input_stream) {
     this->file_stream.open(input_stream, std::ios::in);
     this->line_number = 0;
+}
+
+/**
+ * Return true if some error has occurred during parsing Grammar file.
+ */
+bool LexicalParser::has_grammar_error() const {
+    return this->grammar_parsing_error;
 }
 
 /**

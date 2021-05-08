@@ -20,7 +20,7 @@ T poll(std::stack<T> &st) {
         return top;
     }
     // This means that there is a formatting error in the rules file.
-    throw logic_error("Stack is empty, Format error");
+    throw logic_error("Stack is empty, Format error.");
 }
 
 
@@ -41,7 +41,7 @@ const std::unordered_map<std::string, NFA>& ComponentParser::regDefinitionsToNFA
             else
                 this->regToNFA[regularDefinition] = this->SingleRegDefToNFA(components);
         } catch (logic_error& e) {
-            std::cerr << "Couldn't Parse " << regularDefinition << "\n" << e.what() << "\nCheck your rules format.";
+            std::cerr << "Couldn't Parse " << regularDefinition << ", " << e.what() << " Check your rules format.\n";
         }
     }
     return this->regToNFA;
@@ -61,7 +61,7 @@ NFA ComponentParser::SingleRegDefToNFA(const std::vector<component>& components)
         // 'TO' has highest precedence if found.
         if (i + 1 < components.size() && components[i + 1].type == TO) {
             if (i + 2 >= components.size()) {
-                throw logic_error("to Use '-', you have to have two chars around it");
+                throw logic_error("to Use '-', you have to have two chars around it.");
             }
             NFABuilders.push(applyToOperation(components[i], components[i + 2]));
             i += 2;
@@ -75,7 +75,7 @@ NFA ComponentParser::SingleRegDefToNFA(const std::vector<component>& components)
         }
         else if (comp.type == REG_EXP || comp.type == RED_DEF) {
             if (regToNFA.find(comp.regularDefinition) == regToNFA.end())
-                throw logic_error(comp.regularDefinition + " Was not seen before.");
+                throw logic_error(comp.regularDefinition + " Was not parsed.");
             NFABuilders.push(NFA_Builder(regToNFA[comp.regularDefinition]));
         }
         // Apply a binary operation based on the precedence.
@@ -111,14 +111,14 @@ NFA_Builder ComponentParser::addExpressionInBrackets(const vector<component>& co
         }
         else if (bracketsCount < 0) {
             // bad parsed
-            throw logic_error("Brackets are not balanced");
+            throw logic_error("Brackets are not balanced.");
         }
         temp.push_back(components[j]);
     }
     // If we can't find the corresponding closing brackets.
     if (bracketsCount != 0) {
         // bad parsing
-        throw logic_error("Brackets are not balanced");
+        throw logic_error("Brackets are not balanced.");
     }
     *index = j;
     return NFA_Builder(SingleRegDefToNFA(temp));
@@ -132,18 +132,18 @@ NFA_Builder ComponentParser::applyBinaryOperation(const component_type type, NFA
     switch (type) {
         case CONCAT: return std::move(f.Concatenate(s.build()));
         case OR: return std::move(f.Or(s.build()));
-        default: throw logic_error("Unknown Operation found");
+        default: throw logic_error("Unknown Operation found.");
     }
 }
 
 NFA_Builder ComponentParser::applyToOperation(const component& c1, const component& c2) {
     // Assumption that 'TO' operation takes only rhs char, and lhs char.
     if (c1.regularDefinition.size() != 1 && c2.regularDefinition.size() != 1) {
-        throw logic_error("Check '-' syntax, Just use one char at each end\"eg: a-z\"");
+        throw logic_error("Check '-' syntax, Just use one char at each end\"eg: a-z\".");
     }
     char first = c1.regularDefinition[0];
     char second = c2.regularDefinition[0];
-    if (second - first < 0) throw logic_error("Check '-' syntax, eg: You can use a-z not z-a");
+    if (second - first < 0) throw logic_error("Check '-' syntax, eg: You can use a-z not z-a.");
     NFA_Builder nfa_builder((NFA(first)));
     while (++first <= second) {
         nfa_builder.Or(NFA (first));

@@ -24,17 +24,20 @@ public:
 
     void set_input_stream(const std::string &);
 
+    bool has_grammar_error() const;
+
 private:
     std::fstream file_stream;
     std::queue<Token> tokenBuffer;
     int line_number{};
     const DFA dfa;
+    bool grammar_parsing_error;
 
     int get_next_line();
 
     void performMaximalMunch(const std::string &);
 
-    static DFA parse(const std::string &);
+    DFA parse(const std::string &);
 };
 
 #endif //COMPILER_LEXICALPARSER_H
