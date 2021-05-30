@@ -110,3 +110,50 @@ const Symbol &Rules_builder::getStartSymbol() const {
 bool Rules_builder::fail() const {
     return this->has_error;
 }
+
+void Rules_builder::eliminate_left_recursion() {
+    std::vector<std::vector<Symbol>> new_rules;
+    for (auto &i : rules) {
+        for (auto &j : rules) {
+            if (j == i) {
+                break;
+            }
+            std::vector<std::vector<Symbol>> expanded_prod;
+            for (auto &prod : i.second) {
+                if (is_left_dependent(prod, j.first.name)) {
+                    auto substituted = substitute(prod, j.second);
+                    expanded_prod.insert(expanded_prod.end(), substituted.begin(), substituted.end());
+                }else {
+                    expanded_prod.push_back(prod);
+                }
+            }
+            i.second = expanded_prod;
+        }
+        eliminate_immediate_left_recursion(i.first.name, i.second, new_rules);
+    }
+}
+
+void Rules_builder::eliminate_immediate_left_recursion(const std::string &LHS, const std::vector<std::vector<Symbol>> &RHS, std::vector<std::vector<Symbol>> &new_rules) {
+    std::vector<std::vector<Symbol>> start_with_LHS;
+    std::vector<std::vector<Symbol>> doesnt_start_with_LHS;
+    for (const auto &prod : RHS) {
+        if (is_left_dependent(prod, LHS)) {
+            start_with_LHS.push_back(prod);
+        }else {
+            doesnt_start_with_LHS.push_back(prod);
+        }
+    }
+
+}
+
+bool Rules_builder::is_left_dependent(const std::vector<Symbol> &prod, const std::string &prev_non_terminal) {
+    return prod.front().name == prev_non_terminal && prod.front().type == Symbol::Type::NON_TERMINAL;
+}
+
+std::vector<std::vector<Symbol>> Rules_builder::substitute(std::vector<Symbol> &curProd, std::vector<std::vector<Symbol>> prevProd) {
+    curProd.erase(curProd.begin());
+    for (auto &rule : prevProd) {
+        rule.insert(rule.end(), curProd.begin(), curProd.end());
+    }
+    return prevProd;
+}

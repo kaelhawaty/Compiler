@@ -3,6 +3,7 @@
 #include "src/Parser/Utils/ParserUtils.h"
 #include "src/Parser/LexicalParser.h"
 #include "src/Syntax_Parser/Rules_builder.h"
+
 int main(int argc, char *argv[])
 {
     /*
