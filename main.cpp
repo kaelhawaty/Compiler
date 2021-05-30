@@ -2,10 +2,10 @@
 #include "src/Parser/InputParser.h"
 #include "src/Parser/Utils/ParserUtils.h"
 #include "src/Parser/LexicalParser.h"
-
-
+#include "src/Synax_Parser/CFG_Reader.h"
 int main(int argc, char *argv[])
 {
+    /*
     if(argc != 3){
         std::cout << "Error: You need to specify both the rules file path and program file path." << "\n";
         std::cout << "Usage: " << argv[0] << " rulesFilePath programFilePath" << "\n";
@@ -30,5 +30,18 @@ int main(int argc, char *argv[])
     }
     outputFile.flush();
     outputFile.close();
+    */
+    std::string in = "cfg.txt";
+    CFG_Reader parser(in);
+    for (auto lhs : parser.rules) {
+        std::cout << "From: " << lhs.first << ' ';
+        for (auto rhs : lhs.second) {
+            std::cout << " Group ";
+            for (auto x : rhs) {
+                std::cout << x.name << ' ' << "{ " << (x.type==CFG_Reader::Type::TERMINAL ? "TERMINAL" : "NON_TERMINAL") << " }";
+            }
+        }
+        std::cout << '\n';
+    }
     return 0;
 }
