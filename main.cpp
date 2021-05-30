@@ -2,7 +2,7 @@
 #include "src/Parser/InputParser.h"
 #include "src/Parser/Utils/ParserUtils.h"
 #include "src/Parser/LexicalParser.h"
-#include "src/Synax_Parser/CFG_Reader.h"
+#include "src/Syntax_Parser/CFG_Reader.h"
 int main(int argc, char *argv[])
 {
     /*

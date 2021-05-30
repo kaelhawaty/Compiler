@@ -32,8 +32,4 @@ public:
     explicit CFG_Reader(std::string &inputFilePath);
 private:
     void insert_new_definition(std::string &rule_def);
-    void eliminate_left_recursion();
-    void eliminate_immediate_left_recursion(const std::string &LHS, const std::vector<std::vector<Symbol>> &RHS, std::vector<std::vector<Symbol>> &new_rules);
-    bool is_left_dependent(const std::vector<Symbol> &prod, const std::string &prev_non_terminal);
-    std::vector<std::vector<Symbol>> substitute(std::vector<Symbol> &curProd, std::vector<std::vector<Symbol>> prevProd);
 };
