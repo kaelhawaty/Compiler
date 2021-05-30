@@ -100,12 +100,12 @@ NFA::Set E_closure(const NFA::Set &states) {
     while (!q.empty()) {
         auto front = q.front();
         q.pop();
-        if (!front->trans.count(EPSILON)) {
+        auto it = front->trans.find(EPSILON);
+        if (it == front->trans.end()) {
             continue;
         }
-        for (const auto &child : front->trans.at(EPSILON)) {
-            if (!closure.count(child.get())) {
-                closure.insert(child.get());
+        for (const auto &child : it->second) {
+            if (closure.insert(child.get()).second) {
                 q.push(child.get());
             }
         }
@@ -121,10 +121,11 @@ NFA::Set E_closure(const NFA::Set &states) {
 NFA::Set Move(const NFA::Set &states, const char c) {
     NFA::Set new_set;
     for (auto &state : states) {
-        if (!state->trans.count(c)) {
+        auto it = state->trans.find(c);
+        if (it == state->trans.end()) {
             continue;
         }
-        for (const auto &child : state->trans.at(c)) {
+        for (const auto &child : it->second) {
             new_set.insert(child.get());
         }
     }

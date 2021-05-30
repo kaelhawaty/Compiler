@@ -14,7 +14,7 @@ namespace NFA_test {
      * a transition to the corresponding node in the other graph by trying out all of
      * the permutation. For our case, two NFAs are equal if they behave the same.
      */
-    bool dfs(NFA::Set a, NFA::Set b, std::map<NFA::Set, NFA::Set> &visited) {
+    bool dfs(NFA::Set a, NFA::Set b, std::unordered_map<NFA::Set, NFA::Set> &visited) {
         const int is_visited_a = visited.count(a);
         const int is_visited_b = visited.count(b);
         if(is_visited_a != is_visited_b){
@@ -33,7 +33,7 @@ namespace NFA_test {
     }
 
     bool areEqual(const NFA &a, const NFA &b) {
-        std::map<NFA::Set, NFA::Set> visited;
+        std::unordered_map<NFA::Set, NFA::Set> visited;
         return dfs(NFA::Set{a.get_start()}, NFA::Set{b.get_start()}, visited);
     }
 

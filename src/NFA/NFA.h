@@ -49,7 +49,7 @@ public:
      * Simple set of Nodes/States of the NFA which we define operations such as
      * Move, E_closure on, see below.
      */
-    using Set = std::set<const NFA::Node *>;
+    using Set = std::unordered_set<const NFA::Node *>;
 
     class Node {
     public:
@@ -92,6 +92,20 @@ private:
     std::shared_ptr<Node> start, end;
 
 };
+
+namespace std
+{
+    template<>struct hash<NFA::Set>{
+        size_t operator() (const NFA::Set& st) const noexcept {
+            size_t res = 0;
+            auto op = hash<NFA::Set::value_type>{};
+            for(const auto& elem: st){
+                res ^= op(elem);
+            }
+            return res;
+        }
+    };
+}
 
 /**
  * Given a set of Nodes/States of the NFA, It returns ε-closure of that set
