@@ -2,9 +2,9 @@
 // Created by hazem on 5/30/2021.
 //
 
-#include "CFG_Reader.h"
+#include "Rules_builder.h"
 
-const char RULE_SEPARATOR = '|';
+const char PRODUCTION_SEPARATOR = '|';
 const char RULE_START = '#';
 const char RULE_ASSIGNMENT = '=';
 const char DASH = '\'';
@@ -14,14 +14,8 @@ const char DASH = '\'';
  *  of productions and each group is a sequence of symbols (TERMINALS/NON_TERMINALS/EPSILON)
  *  and finally eliminate left recursion.
  * @param inputFilePath path to file containing the CFG file of the given language.
- * @return CFG_Reader object containing the rules of the language and the start symbol.
- *
  */
-std::tuple<std::unordered_map<Symbol, Rule>, Symbol, bool> CFG_Reader::parse_input_file(
-        std::string &inputFilePath) {
-    std::unordered_map<Symbol, Rule> rules;
-    Symbol start_symbol;
-    bool has_error;
+Rules_builder::Rules_builder(const std::string &inputFilePath) : has_error(false) {
     std::unordered_map<std::string, bool> defined_in_lhs;
     std::fstream file;
     file.open(inputFilePath, std::ios::in);
@@ -29,31 +23,28 @@ std::tuple<std::unordered_map<Symbol, Rule>, Symbol, bool> CFG_Reader::parse_inp
         std::cerr << "Invalid CFG file path\n";
         exit(-1);
     }
-    has_error = false;
     std::string current_def, line;
     getline(file, current_def);
     while (getline(file, line)) {
         if (line[0] == RULE_START) {
-            insert_new_definition(current_def, rules, start_symbol, has_error, defined_in_lhs);
+            insert_new_definition(current_def, defined_in_lhs);
             current_def = line;
         } else {
             current_def += ' ' + line;
         }
     }
-    insert_new_definition(current_def, rules, start_symbol, has_error, defined_in_lhs);
+    insert_new_definition(current_def, defined_in_lhs);
     file.close();
     for (const auto &[symbol, defined] : defined_in_lhs) {
         if (!defined) {
-            std::cerr << "Symbol: " << symbol << "is not defined but used!\n";
+            std::cerr << "Symbol: " << symbol << " is not defined but used!\n";
             has_error = true;
         }
     }
-    return std::make_tuple(rules, start_symbol, has_error);
 }
 
 void
-CFG_Reader::insert_new_definition(std::string &rule_def, std::unordered_map<Symbol, Rule> &rules, Symbol &start_symbol,
-                                  bool &has_error, std::unordered_map<std::string, bool> &defined_in_lhs) {
+Rules_builder::insert_new_definition(std::string &rule_def, std::unordered_map<std::string, bool> &defined_in_lhs) {
     std::istringstream iss(rule_def);
     std::string token, LHS;
     iss >> token;
@@ -72,7 +63,7 @@ CFG_Reader::insert_new_definition(std::string &rule_def, std::unordered_map<Symb
     Production current_prod;
     std::vector<Production> productions;
     while (iss >> token) {
-        if (token.size() == 1 && token[0] == RULE_SEPARATOR) {
+        if (token.size() == 1 && token[0] == PRODUCTION_SEPARATOR) {
             if (current_prod.empty()) {
                 std::cerr << "Productions can't be empty\n";
                 has_error = true;
@@ -100,9 +91,22 @@ CFG_Reader::insert_new_definition(std::string &rule_def, std::unordered_map<Symb
     } else {
         productions.push_back(std::move(current_prod));
     }
-    rules[{LHS, Symbol::Type::NON_TERMINAL}].insert(rules[{LHS, Symbol::Type::NON_TERMINAL}].end(), productions.begin(),
-                                                    productions.end());
+
+    Rule &rule_lhs = rules[{LHS, Symbol::Type::NON_TERMINAL}];
+    rule_lhs.insert(rule_lhs.end(), productions.begin(), productions.end());
     if (start_symbol.name.empty()) {
         start_symbol = {LHS, Symbol::Type::NON_TERMINAL};
     }
+}
+
+const std::unordered_map<Symbol, Rule> &Rules_builder::getRules() const {
+    return this->rules;
+}
+
+const Symbol &Rules_builder::getStartSymbol() const {
+    return this->start_symbol;
+}
+
+bool Rules_builder::fail() const {
+    return this->has_error;
 }

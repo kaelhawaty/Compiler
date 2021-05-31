@@ -2,7 +2,7 @@
 #include "src/Parser/InputParser.h"
 #include "src/Parser/Utils/ParserUtils.h"
 #include "src/Parser/LexicalParser.h"
-#include "src/Syntax_Parser/CFG_Reader.h"
+#include "src/Syntax_Parser/Rules_builder.h"
 int main(int argc, char *argv[])
 {
     /*
@@ -32,12 +32,12 @@ int main(int argc, char *argv[])
     outputFile.close();
     */
     std::string in = "cfg.txt";
-    auto rules = CFG_Reader::parse_input_file(in);
-    for (auto lhs : std::get<0>(rules)) {
+    Rules_builder builder(in);
+    for (const auto &lhs : builder.getRules()) {
         std::cout << "From: " << lhs.first.name << ' ';
-        for (auto rhs : lhs.second) {
+        for (const auto &rhs : lhs.second) {
             std::cout << " Group ";
-            for (auto x : rhs) {
+            for (const auto &x : rhs) {
                 std::cout << x.name << ' ' << "{ " << (x.type==Symbol::Type::TERMINAL ? "TERMINAL" : (x.type==Symbol::Type::NON_TERMINAL ? "NON_TERMINAL" : "EPSILON")) << " }";
             }
         }
