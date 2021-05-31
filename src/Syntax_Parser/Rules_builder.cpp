@@ -75,7 +75,7 @@ Rules_builder::insert_new_definition(std::string &rule_def, std::unordered_map<s
             if (token[0] == '\'' && token[token.size() - 1] == '\'') {
                 symbol = {token.substr(1, token.size() - 2), Symbol::Type::TERMINAL};
             } else if (token.size() == 2 && token[0] == '\\' && token[1] == 'L') {
-                symbol = {token, Symbol::Type::EPSILON};
+                symbol = eps_symbol;
             } else {
                 symbol = {token, Symbol::Type::NON_TERMINAL};
                 if (!defined_in_lhs.count(token)) {
