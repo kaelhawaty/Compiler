@@ -32,5 +32,8 @@ namespace std
     };
 }
 
+// it's just assumption, can be changed later.
+const Symbol eps_symbol = {"Є", Symbol::Type::EPSILON};
+
 using Production = std::vector<Symbol>;
 using Rule = std::vector<Production>;

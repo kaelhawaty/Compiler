@@ -3,13 +3,8 @@
 //
 
 #include "Syntax_Utils.h"
-#include <iostream>
 #include <map>
 #include <cassert>
-
-
-// it's just assumption, can be changed later.
-const Symbol eps_symbol = {"Є", Symbol::Type::EPSILON};
 
 Syntax_Utils::Syntax_Utils(const std::unordered_map<Symbol, Rule> &rules,
                            const Symbol &start_symbol) {
@@ -22,10 +17,7 @@ Syntax_Utils::Syntax_Utils(const std::unordered_map<Symbol, Rule> &rules,
     }
 
     // Then, construct Follow table.
-    if (this->follow.find(start_symbol) == this->follow.end()) {
-        std::cerr << "The start symbol " << start_symbol.name << " does not have a rule.\n";
-        this->follow.insert({start_symbol, {}});
-    }
+    assert(this->follow.find(start_symbol) != this->follow.end() && "Error: The rules have some undefined symbols, check it again.");
     this->precompute_follow(rules, start_symbol);
 }
 
@@ -108,10 +100,8 @@ void Syntax_Utils::precompute_first(const Symbol &non_terminal,
         add_epsilon |= curr_epsilon;
     }
 
-    bool eps_in_first = current_first.find(eps_symbol) != current_first.end();
-
     // Makes sure if the epsilon should be in the first set or not.
-    if (eps_in_first && !add_epsilon) {
+    if (!add_epsilon) {
         current_first.erase(eps_symbol);
     }
 }
