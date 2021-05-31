@@ -32,13 +32,13 @@ int main(int argc, char *argv[])
     outputFile.close();
     */
     std::string in = "cfg.txt";
-    CFG_Reader parser(in);
-    for (auto lhs : parser.rules) {
-        std::cout << "From: " << lhs.first << ' ';
+    auto rules = CFG_Reader::parse_input_file(in);
+    for (auto lhs : std::get<0>(rules)) {
+        std::cout << "From: " << lhs.first.name << ' ';
         for (auto rhs : lhs.second) {
             std::cout << " Group ";
             for (auto x : rhs) {
-                std::cout << x.name << ' ' << "{ " << (x.type==CFG_Reader::Type::TERMINAL ? "TERMINAL" : "NON_TERMINAL") << " }";
+                std::cout << x.name << ' ' << "{ " << (x.type==Symbol::Type::TERMINAL ? "TERMINAL" : (x.type==Symbol::Type::NON_TERMINAL ? "NON_TERMINAL" : "EPSILON")) << " }";
             }
         }
         std::cout << '\n';

@@ -6,30 +6,21 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
-#include <cassert>
+#include <sstream>
+#include <tuple>
 #include "../Parser/Utils/ParserUtils.h"
+#include "Syntax_Analyzer.h"
+
 #ifndef COMPILER_CFG_READER_H
 #define COMPILER_CFG_READER_H
 
 #endif //COMPILER_CFG_READER_H
 
 
+namespace CFG_Reader {
 
-class CFG_Reader {
-public:
-    enum class Type {
-        TERMINAL,
-        NON_TERMINAL,
-        EPSILON
-    };
-    struct Symbol {
-        std::string name;
-        Type type;
-    };
-    using Production = std::vector<Symbol>;
-    std::unordered_map<std::string, std::vector<Production>> rules;
-    std::string start_symbol;
-    explicit CFG_Reader(std::string &inputFilePath);
-private:
-    void insert_new_definition(std::string &rule_def);
-};
+    std::tuple<std::unordered_map<Symbol, Rule>, Symbol, bool> parse_input_file(std::string &inputFilePath);
+
+    void insert_new_definition(std::string &rule_def, std::unordered_map<Symbol, Rule> &rules, Symbol &start_symbol,
+                               bool &has_error, std::unordered_map<std::string, bool> &defined_in_lhs);
+}
