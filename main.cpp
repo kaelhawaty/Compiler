@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
             std::cout << " Group ";
             for (const auto &x : rhs) {
                 std::cout << x.name << ' ' << "{ " << (x.type==Symbol::Type::TERMINAL ? "TERMINAL" : (x.type==Symbol::Type::NON_TERMINAL ? "NON_TERMINAL" : "EPSILON")) << " }";
+
             }
         }
         std::cout << '\n';
