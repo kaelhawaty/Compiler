@@ -32,12 +32,11 @@ Syntax_Utils::Syntax_Utils(const std::unordered_map<std::string, std::vector<Pro
 
 // Assumption it returns the name of the symbol when the symbol is not non-terminal.
 Syntax_Utils::First_set Syntax_Utils::first_of(const Symbol &symbol) {
-    if (symbol.type == Type::NON_TERMINAL) {
-        return Syntax_Utils::find(this->first, symbol);
-    }
-    else {
+    if (symbol.type != Type::NON_TERMINAL) {
         return {symbol};
+
     }
+    return Syntax_Utils::find(this->first, symbol);
 }
 
 Syntax_Utils::First_set Syntax_Utils::first_of(const Syntax_Utils::Production& production) {
