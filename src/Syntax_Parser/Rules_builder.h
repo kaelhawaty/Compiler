@@ -17,6 +17,7 @@
 #endif //COMPILER_CFG_READER_H
 
 
+
 class Rules_builder {
 public:
     explicit Rules_builder(const std::string &inputFilePath);
@@ -29,9 +30,13 @@ public:
 
 private:
     void insert_new_definition(std::string &rule_def, std::unordered_map<std::string, bool> &defined_in_lhs);
+
     void eliminate_left_recursion();
+
     void eliminate_immediate_left_recursion(const std::string &LHS, const std::vector<Production> &RHS);
+
     bool is_left_dependent(const Production &prod, const std::string &prev_non_terminal);
+
     std::vector<Production> substitute(Production &curProd, std::vector<Production> prevProd);
 
     std::unordered_map<Symbol, Rule> rules;
