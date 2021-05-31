@@ -3,12 +3,12 @@
 //
 
 #include "gtest/gtest.h"
-#include "../src/Synax_Parser/Syntax_Utils.h"
+#include "../src/Syntax_Parser/Syntax_Utils.h"
 
 
 namespace Syntax_Utils_tests {
 
-    void checkTerminalEquality(std::unordered_set<std::string> expected_terminals, Syntax_Utils::Terminal_set res_terminals) {
+    void checkTerminalEquality(std::unordered_set<std::string> expected_terminals, const Syntax_Utils::Terminal_set& res_terminals) {
         EXPECT_EQ(res_terminals.size(), expected_terminals.size());
         for (const Symbol &s : res_terminals) {
             EXPECT_TRUE(expected_terminals.find(s.name) != expected_terminals.end());
@@ -22,17 +22,17 @@ namespace Syntax_Utils_tests {
         //T  -> F Y
         //Y  -> *F Y | #
         //F  -> (E) | i
-        std::unordered_map<std::string, std::vector<std::vector<Symbol>>> rules = {
-                {"E", {{{"T", Type::NON_TERMINAL}, {"R", Type::NON_TERMINAL}}}},
-                {"R", {{{"+", Type::TERMINAL}, {"T", Type::NON_TERMINAL}, {"R", Type::NON_TERMINAL}},
-                              {{"Є", Type::EPSILON}}}},
-                {"T", {{{"F", Type::NON_TERMINAL}, {"Y", Type::NON_TERMINAL}}}},
-                {"Y", {{{"*", Type::TERMINAL},{"F", Type::NON_TERMINAL}, {"Y", Type::NON_TERMINAL}},
-                              {{"Є", Type::EPSILON}}}},
-                {"F", {{{"(", Type::TERMINAL}, {"E", Type::NON_TERMINAL}, {")", Type::TERMINAL}},
-                              {{"i", Type::TERMINAL}}}}
+        std::unordered_map<Symbol, Rule> rules = {
+                {{"E", Symbol::Type::NON_TERMINAL}, {{{"T", Symbol::Type::NON_TERMINAL}, {"R", Symbol::Type::NON_TERMINAL}}}},
+                {{"R", Symbol::Type::NON_TERMINAL}, {{{"+", Symbol::Type::TERMINAL}, {"T", Symbol::Type::NON_TERMINAL}, {"R", Symbol::Type::NON_TERMINAL}},
+                              {{"Є", Symbol::Type::EPSILON}}}},
+                {{"T", Symbol::Type::NON_TERMINAL}, {{{"F", Symbol::Type::NON_TERMINAL}, {"Y", Symbol::Type::NON_TERMINAL}}}},
+                {{"Y", Symbol::Type::NON_TERMINAL}, {{{"*", Symbol::Type::TERMINAL},{"F", Symbol::Type::NON_TERMINAL}, {"Y", Symbol::Type::NON_TERMINAL}},
+                              {{"Є", Symbol::Type::EPSILON}}}},
+                {{"F", Symbol::Type::NON_TERMINAL}, {{{"(", Symbol::Type::TERMINAL}, {"E", Symbol::Type::NON_TERMINAL}, {")", Symbol::Type::TERMINAL}},
+                              {{"i", Symbol::Type::TERMINAL}}}}
         };
-        Symbol first_symbol = {"E", Type::NON_TERMINAL};
+        Symbol first_symbol = {"E", Symbol::Type::NON_TERMINAL};
         Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"E", "R", "T", "Y", "F"};
         std::vector<std::unordered_set<std::string>> firsts = {{"(", "i"},
@@ -47,7 +47,7 @@ namespace Syntax_Utils_tests {
                                                                 {"+", "$", ")"},
                                                                 {"*", "+", "$", ")"}};
         for (int i = 0; i < non_terminals.size(); i++) {
-            Symbol symbol = {non_terminals[i], Type::NON_TERMINAL};
+            Symbol symbol = {non_terminals[i], Symbol::Type::NON_TERMINAL};
             Syntax_Utils::First_set curr_first = utils_syntax.first_of(symbol);
             Syntax_Utils::Follow_set curr_follow = utils_syntax.follow_of(symbol);
 
@@ -64,18 +64,18 @@ namespace Syntax_Utils_tests {
         //D -> EF
         //E -> g | Є
         //F -> f | Є
-        std::unordered_map<std::string, std::vector<std::vector<Symbol>>> rules = {
-                {"S", {{{"a", Type::TERMINAL}, {"B", Type::NON_TERMINAL}, {"D", Type::NON_TERMINAL}, {"h", Type::TERMINAL}}}},
-                {"B", {{{"c", Type::TERMINAL}, {"C", Type::NON_TERMINAL}}}},
-                {"C", {{{"b", Type::TERMINAL}, {"C", Type::NON_TERMINAL}},
-                              {{"Є", Type::EPSILON}}}},
-                {"D", {{{"E", Type::NON_TERMINAL}, {"F", Type::NON_TERMINAL}}}},
-                {"E", {{{"g", Type::TERMINAL}},
-                              {{"Є", Type::EPSILON}}}},
-                {"F", {{{"f", Type::TERMINAL}},
-                              {{"Є", Type::EPSILON}}}}
+        std::unordered_map<Symbol, Rule> rules = {
+                {{"S", Symbol::Type::NON_TERMINAL}, {{{"a", Symbol::Type::TERMINAL}, {"B", Symbol::Type::NON_TERMINAL}, {"D", Symbol::Type::NON_TERMINAL}, {"h", Symbol::Type::TERMINAL}}}},
+                {{"B", Symbol::Type::NON_TERMINAL}, {{{"c", Symbol::Type::TERMINAL}, {"C", Symbol::Type::NON_TERMINAL}}}},
+                {{"C", Symbol::Type::NON_TERMINAL}, {{{"b", Symbol::Type::TERMINAL}, {"C", Symbol::Type::NON_TERMINAL}},
+                              {{"Є", Symbol::Type::EPSILON}}}},
+                {{"D", Symbol::Type::NON_TERMINAL}, {{{"E", Symbol::Type::NON_TERMINAL}, {"F", Symbol::Type::NON_TERMINAL}}}},
+                {{"E", Symbol::Type::NON_TERMINAL}, {{{"g", Symbol::Type::TERMINAL}},
+                              {{"Є", Symbol::Type::EPSILON}}}},
+                {{"F", Symbol::Type::NON_TERMINAL}, {{{"f", Symbol::Type::TERMINAL}},
+                              {{"Є", Symbol::Type::EPSILON}}}}
         };
-        Symbol first_symbol = {"S", Type::NON_TERMINAL};
+        Symbol first_symbol = {"S", Symbol::Type::NON_TERMINAL};
         Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"S", "B", "C", "D", "E", "F"};
         std::vector<std::unordered_set<std::string>> firsts = {{"a"},
@@ -92,7 +92,7 @@ namespace Syntax_Utils_tests {
                                                                 {"f", "h"},
                                                                 {"h"}};
         for (int i = 0; i < non_terminals.size(); i++) {
-            Symbol symbol = {non_terminals[i], Type::NON_TERMINAL};
+            Symbol symbol = {non_terminals[i], Symbol::Type::NON_TERMINAL};
             Syntax_Utils::First_set curr_first = utils_syntax.first_of(symbol);
             Syntax_Utils::Follow_set curr_follow = utils_syntax.follow_of(symbol);
 
@@ -103,22 +103,22 @@ namespace Syntax_Utils_tests {
     }
 
     TEST(FirstFollowConstruction, adding_undefined_non_terminal) {
-        //S -> AQCB|Cbb|Ba
+        //S -> ACB|Cbb|Ba
         //A -> da|BC
         //B-> g|Є
         //C-> h| Є
-        std::unordered_map<std::string, std::vector<std::vector<Symbol>>> rules = {
-                {"S", {{{"A", Type::NON_TERMINAL},{"Q", Type::NON_TERMINAL} ,{"C", Type::NON_TERMINAL}, {"B", Type::NON_TERMINAL}},
-                              {{"C", Type::NON_TERMINAL}, {"b", Type::TERMINAL}, {"b", Type::TERMINAL}},
-                              {{"B", Type::NON_TERMINAL}, {"a", Type::TERMINAL}}}},
-                {"A", {{{"d", Type::TERMINAL}, {"a", Type::TERMINAL}},
-                              {{"B", Type::NON_TERMINAL}, {"C", Type::NON_TERMINAL}}}},
-                {"B", {{{"g", Type::TERMINAL}},
-                              {{"Є", Type::EPSILON}}}},
-                {"C", {{{"h", Type::TERMINAL}},
-                              {{"Є", Type::EPSILON}}}}
+        std::unordered_map<Symbol, Rule> rules = {
+                {{"S", Symbol::Type::NON_TERMINAL}, {{{"A", Symbol::Type::NON_TERMINAL}, {"C", Symbol::Type::NON_TERMINAL}, {"B", Symbol::Type::NON_TERMINAL}},
+                              {{"C", Symbol::Type::NON_TERMINAL}, {"b", Symbol::Type::TERMINAL}, {"b", Symbol::Type::TERMINAL}},
+                              {{"B", Symbol::Type::NON_TERMINAL}, {"a", Symbol::Type::TERMINAL}}}},
+                {{"A", Symbol::Type::NON_TERMINAL}, {{{"d", Symbol::Type::TERMINAL}, {"a", Symbol::Type::TERMINAL}},
+                              {{"B", Symbol::Type::NON_TERMINAL}, {"C", Symbol::Type::NON_TERMINAL}}}},
+                {{"B", Symbol::Type::NON_TERMINAL}, {{{"g", Symbol::Type::TERMINAL}},
+                              {{"Є", Symbol::Type::EPSILON}}}},
+                {{"C", Symbol::Type::NON_TERMINAL}, {{{"h", Symbol::Type::TERMINAL}},
+                              {{"Є", Symbol::Type::EPSILON}}}}
         };
-        Symbol first_symbol = {"S", Type::NON_TERMINAL};
+        Symbol first_symbol = {"S", Symbol::Type::NON_TERMINAL};
         Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"S", "A", "B", "C"};
         std::vector<std::unordered_set<std::string>> firsts = {{"d", "g", "h", "Є", "b", "a"},
@@ -131,7 +131,7 @@ namespace Syntax_Utils_tests {
                                                                 {"g", "a", "h", "$"},
                                                                 {"h", "b", "g", "$"}};
         for (int i = 0; i < non_terminals.size(); i++) {
-            Symbol symbol = {non_terminals[i], Type::NON_TERMINAL};
+            Symbol symbol = {non_terminals[i], Symbol::Type::NON_TERMINAL};
             Syntax_Utils::First_set curr_first = utils_syntax.first_of(symbol);
             Syntax_Utils::Follow_set curr_follow = utils_syntax.follow_of(symbol);
 

@@ -9,17 +9,16 @@
 
 
 // it's just assumption, can be changed later.
-const Symbol eps_symbol = {"Є", Type::EPSILON};
+const Symbol eps_symbol = {"Є", Symbol::Type::EPSILON};
 
-Syntax_Utils::Syntax_Utils(const std::unordered_map<std::string, std::vector<Production>> &rules,
+Syntax_Utils::Syntax_Utils(const std::unordered_map<Symbol, Rule> &rules,
                            const Symbol &start_symbol) {
 
     // First, construct first table.
     for (auto &[non_terminal, _] : rules) {
-        Symbol non_terminal_symbol = {non_terminal, Type::NON_TERMINAL};
-        this->precompute_first(non_terminal_symbol, rules);
+        this->precompute_first(non_terminal, rules);
         // initialize the follow sets
-        this->follow.insert({non_terminal_symbol, {}});
+        this->follow.insert({non_terminal, {}});
     }
 
     // Then, construct Follow table.
@@ -32,14 +31,13 @@ Syntax_Utils::Syntax_Utils(const std::unordered_map<std::string, std::vector<Pro
 
 // Assumption it returns the name of the symbol when the symbol is not non-terminal.
 Syntax_Utils::First_set Syntax_Utils::first_of(const Symbol &symbol) {
-    if (symbol.type != Type::NON_TERMINAL) {
+    if (symbol.type != Symbol::Type::NON_TERMINAL) {
         return {symbol};
-
     }
     return Syntax_Utils::find(this->first, symbol);
 }
 
-Syntax_Utils::First_set Syntax_Utils::first_of(const Syntax_Utils::Production& production) {
+Syntax_Utils::First_set Syntax_Utils::first_of(const Production& production) {
     First_set curr_first = {eps_symbol};
     for (const Symbol &symbol : production) {
         First_set symbol_first = first_of(symbol);
@@ -53,7 +51,7 @@ Syntax_Utils::First_set Syntax_Utils::first_of(const Syntax_Utils::Production& p
 }
 
 Syntax_Utils::Follow_set Syntax_Utils::follow_of(const Symbol &symbol) {
-    assert(symbol.type == Type::NON_TERMINAL);
+    assert(symbol.type == Symbol::Type::NON_TERMINAL && "Error: no follow-set for terminal/epsilon symbol");
     return Syntax_Utils::find(this->follow, symbol);
 }
 
@@ -68,7 +66,7 @@ Syntax_Utils::find(std::unordered_map<Symbol, Terminal_set> &set,const Symbol &n
 
 // Assumption: The rules CAN't have Left recursion, it may lead to undefined behavior if there's any.
 void Syntax_Utils::precompute_first(const Symbol &non_terminal,
-                                    const std::unordered_map<std::string, std::vector<Production>> &rules) {
+                                    const std::unordered_map<Symbol, Rule> &rules) {
 
     // Checks if we have visited that non-terminal before.
     if (this->first.find(non_terminal) != this->first.end()) {
@@ -76,22 +74,15 @@ void Syntax_Utils::precompute_first(const Symbol &non_terminal,
     }
     this->first.insert({non_terminal, {eps_symbol}});
 
-    // this type of error could be handled in different ways
-    // but for now, we will insert a new rule
-    // "undefined_non_terminal --> Є"
-    // which makes the first set {Є}.
-    if (rules.find(non_terminal.name) == rules.end()) {
-        std::cerr << non_terminal.name << " is not defined.\n";
-        // Also initialize its follow set, since it won't be found in the rules map.
-        this->follow.insert({non_terminal, {}});
-        return;
-    }
+    // Assumption: no errors of these kinds are allowed.
+    assert(rules.find(non_terminal) != rules.end() && "Error: The rules have some undefined symbols, check it again.");
+
     // Keeps track if the first set of the current non-terminal so far.
     First_set &current_first = this->first.at(non_terminal);
 
     // As long as epsilon is false, the final first set shouldn't contain epsilon.
     bool add_epsilon = false;
-    for (const Production &production : rules.at(non_terminal.name)) {
+    for (const Production &production : rules.at(non_terminal)) {
 
         // epsilon flag relative to the current production.
         // it's used also while iterating to decide if we should stop iterating if
@@ -99,10 +90,10 @@ void Syntax_Utils::precompute_first(const Symbol &non_terminal,
         bool curr_epsilon = true;
         for (int i = 0; i < production.size() && curr_epsilon; i++) {
             const Symbol &symbol = production.at(i);
-            if (symbol.type == Type::TERMINAL) {
+            if (symbol.type == Symbol::Type::TERMINAL) {
                 current_first.insert(symbol);
                 curr_epsilon = false;
-            } else if (symbol.type == Type::NON_TERMINAL) {
+            } else if (symbol.type == Symbol::Type::NON_TERMINAL) {
                 precompute_first(symbol, rules);
                 const First_set &temp = this->first.at(symbol);
                 if (temp.find(eps_symbol) == temp.end()) {
@@ -110,7 +101,7 @@ void Syntax_Utils::precompute_first(const Symbol &non_terminal,
                 }
                 current_first.insert(temp.begin(), temp.end());
             }
-            else if (symbol.type == Type::EPSILON) {
+            else if (symbol.type == Symbol::Type::EPSILON) {
                 current_first.emplace(eps_symbol);
             }
         }
@@ -125,9 +116,11 @@ void Syntax_Utils::precompute_first(const Symbol &non_terminal,
     }
 }
 
-void Syntax_Utils::precompute_follow(const std::unordered_map<std::string, std::vector<Production>> &rules,
+void Syntax_Utils::precompute_follow(const std::unordered_map<Symbol, Rule> &rules,
                                      const Symbol &start_symbol) {
-    this->follow.at(start_symbol).insert({"$", Type::TERMINAL});
+    // it's just an assumption to use the dollar sign as an endmarker, following the reference convention.
+    const std::string special_endmarker = "$";
+    this->follow.at(start_symbol).insert({special_endmarker, Symbol::Type::TERMINAL});
     this->follow_calculate_by_first(rules);
     this->follow_calculate_by_follow(rules);
 }
@@ -139,14 +132,14 @@ void Syntax_Utils::precompute_follow(const std::unordered_map<std::string, std::
  *    and to calculate FOLLOW(C), we will need to get FIRST(D).
  *    so we can simply starts iterating backward and just merge if the non-terminal has Є.
  */
-void Syntax_Utils::follow_calculate_by_first(const std::unordered_map<std::string, std::vector<Production>> &rules) {
+void Syntax_Utils::follow_calculate_by_first(const std::unordered_map<Symbol, Rule> &rules) {
 
-    for (const auto &[lhs_non_terminal, rule] : rules) {
+    for (const auto &[_, rule] : rules) {
         for (const Production &production: rule) {
             First_set curr_first;
             for (int i = (int)production.size() - 1; i >= 0; i--) {
                 const Symbol &symbol = production.at(i);
-                if (symbol.type == Type::NON_TERMINAL) {
+                if (symbol.type == Symbol::Type::NON_TERMINAL) {
                     // Update the follow set with the first set of the suffix non-terminals.
                     this->follow.at(symbol).insert(curr_first.begin(), curr_first.end());
                     auto symbol_first = this->first.at(symbol);
@@ -160,7 +153,7 @@ void Syntax_Utils::follow_calculate_by_first(const std::unordered_map<std::strin
                     curr_first.insert(symbol_first.begin(), symbol_first.end());
 
                 }
-                else if (symbol.type == Type::TERMINAL){
+                else if (symbol.type == Symbol::Type::TERMINAL){
                     curr_first.clear();
                     curr_first.insert(symbol);
                 }
@@ -173,15 +166,15 @@ void Syntax_Utils::follow_calculate_by_first(const std::unordered_map<std::strin
  *  It keeps applying the third rule until no change is observed in the follow sets.
  *  Changes are observed by keeping tracks of the size of each follow set and compare the old with the new one.
  */
-void Syntax_Utils::follow_calculate_by_follow(const std::unordered_map<std::string, std::vector<Production>> &rules) {
+void Syntax_Utils::follow_calculate_by_follow(const std::unordered_map<Symbol, Rule> &rules) {
 
     bool updated;
     do {
         updated = false;
         for (const auto &[lhs_non_terminal, rule] : rules) {
-            const auto &lhs_follow = this->follow.at({lhs_non_terminal, Type::NON_TERMINAL});
+            const auto &lhs_follow = this->follow.at(lhs_non_terminal);
             for (const Production &production: rule) {
-                for (int i = (int)production.size() - 1; i >= 0 && production.at(i).type == Type::NON_TERMINAL; i--) {
+                for (int i = (int)production.size() - 1; i >= 0 && production.at(i).type == Symbol::Type::NON_TERMINAL; i--) {
                     const Symbol &symbol = production.at(i);
                     const auto &symbol_first = this->first.at(symbol);
                     auto &symbol_follow = this->follow.at(symbol);

@@ -10,19 +10,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "CFG_Reader.h"
+#include "Syntax_Analyzer.h"
 
-namespace std
-{
-    template<>
-    struct hash<Symbol>
-    {
-        size_t
-        operator()(const Symbol &symbol) const noexcept {
-            return hash<string>()(symbol.name);
-        }
-    };
-}
 
 class Syntax_Utils {
 public:
@@ -30,13 +19,12 @@ public:
     using First_set = std::unordered_set<Symbol>;
     using Follow_set = std::unordered_set<Symbol>;
     using Terminal_set = std::unordered_set<Symbol>;
-    using Production = std::vector<Symbol>;
 
     /**
      * Constructing the Follow and First set using unordered_map of rules,
      * and the Start symbol.
      */
-    Syntax_Utils(const std::unordered_map<std::string, std::vector<Production>> &, const Symbol &);
+    Syntax_Utils(const std::unordered_map<Symbol, Rule> &, const Symbol &);
 
     /**
      *  @return if the symbol is non-terminal, it will return the FIRST(symbol),
@@ -69,7 +57,7 @@ private:
      *      So on.
      *  3. If X -> Є is a production, then add Є to FIRST(X).
      */
-    void precompute_first(const Symbol &, const std::unordered_map<std::string, std::vector<Production>> &);
+    void precompute_first(const Symbol &, const std::unordered_map<Symbol, Rule> &);
 
     /**
      *  To compute FOLLOW(A) for all non-terminals A, apply the following rules
@@ -81,17 +69,17 @@ private:
      *      3. If there is a production A -> aB, or a production A -> aBP, where
      *         FIRST(P) contains Є, then everything in FOLLOW (A) is in FOLLOW (B)
      */
-    void precompute_follow(const std::unordered_map<std::string, std::vector<Production>> &, const Symbol &);
+    void precompute_follow(const std::unordered_map<Symbol, Rule> &, const Symbol &);
 
     /**
      *  Applies the second rule of calculating the follow sets Using the given grammar rules.
      */
-    void follow_calculate_by_first(const std::unordered_map<std::string, std::vector<Production>> &);
+    void follow_calculate_by_first(const std::unordered_map<Symbol, Rule> &);
 
     /**
      *  Applies the third rule of calculating the follow sets Using the given grammar rules.
      */
-    void follow_calculate_by_follow(const std::unordered_map<std::string, std::vector<Production>> &);
+    void follow_calculate_by_follow(const std::unordered_map<Symbol, Rule> &);
 
     static Terminal_set find(std::unordered_map<Symbol, Terminal_set>& ,const Symbol &);
 
