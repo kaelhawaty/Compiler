@@ -3,11 +3,18 @@
 //
 
 #include "gtest/gtest.h"
-#include "../src/Synax_Parser/Syntax_Utilization.h"
+#include "../src/Synax_Parser/Syntax_Utils.h"
 
 
 namespace Syntax_Utils_tests {
-    const string str_eps = string(1, 0);
+
+    void checkTerminalEquality(std::unordered_set<std::string> expected_terminals, Syntax_Utils::Terminal_set res_terminals) {
+        EXPECT_EQ(res_terminals.size(), expected_terminals.size());
+        for (const Symbol &s : res_terminals) {
+            EXPECT_TRUE(expected_terminals.find(s.name) != expected_terminals.end());
+        }
+    }
+
     TEST(FirstFollowConstruction, sample1) {
         //Input :
         //E  -> TR
@@ -25,33 +32,27 @@ namespace Syntax_Utils_tests {
                 {"F", {{{"(", Type::TERMINAL}, {"E", Type::NON_TERMINAL}, {")", Type::TERMINAL}},
                               {{"i", Type::TERMINAL}}}}
         };
-        string first_symbol = "E";
-        Syntax_Utilization utils_syntax(rules, first_symbol);
+        Symbol first_symbol = {"E", Type::NON_TERMINAL};
+        Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"E", "R", "T", "Y", "F"};
-        std::vector<unordered_set<std::string>> firsts = {{"(", "i"},
-                                                          {"+", "Є"},
-                                                          {"(", "i"},
-                                                          {"*", "Є"},
-                                                          {"(", "i"}};
+        std::vector<std::unordered_set<std::string>> firsts = {{"(", "i"},
+                                                               {"+", "Є"},
+                                                               {"(", "i"},
+                                                               {"*", "Є"},
+                                                               {"(", "i"}};
 
-        std::vector<unordered_set<std::string>> follows = {{"$", ")"},
-                                                           {"$", ")"},
-                                                           {"+", "$", ")"},
-                                                           {"+", "$", ")"},
-                                                           {"*", "+", "$", ")"}};
-        unordered_set<string> temp;
+        std::vector<std::unordered_set<std::string>> follows = {{"$", ")"},
+                                                                {"$", ")"},
+                                                                {"+", "$", ")"},
+                                                                {"+", "$", ")"},
+                                                                {"*", "+", "$", ")"}};
         for (int i = 0; i < non_terminals.size(); i++) {
-            EXPECT_TRUE(utils_syntax.first_of(non_terminals.at(i), temp));
-            EXPECT_EQ(temp.size(), firsts[i].size());
-            for (const string &st : firsts[i]) {
-                EXPECT_TRUE(temp.find(st) != temp.end());
-            }
+            Symbol symbol = {non_terminals[i], Type::NON_TERMINAL};
+            Syntax_Utils::First_set curr_first = utils_syntax.first_of(symbol);
+            Syntax_Utils::Follow_set curr_follow = utils_syntax.follow_of(symbol);
 
-            EXPECT_TRUE(utils_syntax.follow_of(non_terminals.at(i), temp));
-            EXPECT_EQ(temp.size(), follows[i].size());
-            for (const string &st : follows[i]) {
-                EXPECT_TRUE(temp.find(st) != temp.end());
-            }
+            checkTerminalEquality(firsts[i], curr_first);
+            checkTerminalEquality(follows[i], curr_follow);
         }
 
     }
@@ -74,35 +75,29 @@ namespace Syntax_Utils_tests {
                 {"F", {{{"f", Type::TERMINAL}},
                               {{"Є", Type::EPSILON}}}}
         };
-        string first_symbol = "S";
-        Syntax_Utilization utils_syntax(rules, first_symbol);
+        Symbol first_symbol = {"S", Type::NON_TERMINAL};
+        Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"S", "B", "C", "D", "E", "F"};
-        std::vector<unordered_set<std::string>> firsts = {{"a"},
-                                                          {"c"},
-                                                          {"b", "Є"},
-                                                          {"g", "f", "Є"},
-                                                          {"g", "Є"},
-                                                          {"f", "Є"}};
+        std::vector<std::unordered_set<std::string>> firsts = {{"a"},
+                                                               {"c"},
+                                                               {"b", "Є"},
+                                                               {"g", "f", "Є"},
+                                                               {"g", "Є"},
+                                                               {"f", "Є"}};
 
-        std::vector<unordered_set<std::string>> follows = {{"$"},
-                                                           {"g", "f", "h"},
-                                                           {"g", "f", "h"},
-                                                           {"h"},
-                                                           {"f", "h"},
-                                                           {"h"}};
-        unordered_set<string> temp;
+        std::vector<std::unordered_set<std::string>> follows = {{"$"},
+                                                                {"g", "f", "h"},
+                                                                {"g", "f", "h"},
+                                                                {"h"},
+                                                                {"f", "h"},
+                                                                {"h"}};
         for (int i = 0; i < non_terminals.size(); i++) {
-            EXPECT_TRUE(utils_syntax.first_of(non_terminals.at(i), temp));
-            EXPECT_EQ(temp.size(), firsts[i].size());
-            for (const string &st : firsts[i]) {
-                EXPECT_TRUE(temp.find(st) != temp.end());
-            }
+            Symbol symbol = {non_terminals[i], Type::NON_TERMINAL};
+            Syntax_Utils::First_set curr_first = utils_syntax.first_of(symbol);
+            Syntax_Utils::Follow_set curr_follow = utils_syntax.follow_of(symbol);
 
-            EXPECT_TRUE(utils_syntax.follow_of(non_terminals.at(i), temp));
-            EXPECT_EQ(temp.size(), follows[i].size());
-            for (const string &st : follows[i]) {
-                EXPECT_TRUE(temp.find(st) != temp.end());
-            }
+            checkTerminalEquality(firsts[i], curr_first);
+            checkTerminalEquality(follows[i], curr_follow);
         }
 
     }
@@ -123,31 +118,25 @@ namespace Syntax_Utils_tests {
                 {"C", {{{"h", Type::TERMINAL}},
                               {{"Є", Type::EPSILON}}}}
         };
-        string first_symbol = "S";
-        Syntax_Utilization utils_syntax(rules, first_symbol);
+        Symbol first_symbol = {"S", Type::NON_TERMINAL};
+        Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"S", "A", "B", "C"};
-        std::vector<unordered_set<std::string>> firsts = {{"d", "g", "h", "Є", "b", "a"},
-                                                          {"d", "g", "h", "Є"},
-                                                          {"g", "Є"},
-                                                          {"h", "Є"}};
+        std::vector<std::unordered_set<std::string>> firsts = {{"d", "g", "h", "Є", "b", "a"},
+                                                               {"d", "g", "h", "Є"},
+                                                               {"g", "Є"},
+                                                               {"h", "Є"}};
 
-        std::vector<unordered_set<std::string>> follows = {{"$"},
-                                                           {"g", "$", "h"},
-                                                           {"g", "a", "h", "$"},
-                                                           {"h", "b", "g", "$"}};
-        unordered_set<string> temp;
+        std::vector<std::unordered_set<std::string>> follows = {{"$"},
+                                                                {"g", "$", "h"},
+                                                                {"g", "a", "h", "$"},
+                                                                {"h", "b", "g", "$"}};
         for (int i = 0; i < non_terminals.size(); i++) {
-            EXPECT_TRUE(utils_syntax.first_of(non_terminals.at(i), temp));
-            EXPECT_EQ(temp.size(), firsts[i].size());
-            for (const string &st : firsts[i]) {
-                EXPECT_TRUE(temp.find(st) != temp.end());
-            }
+            Symbol symbol = {non_terminals[i], Type::NON_TERMINAL};
+            Syntax_Utils::First_set curr_first = utils_syntax.first_of(symbol);
+            Syntax_Utils::Follow_set curr_follow = utils_syntax.follow_of(symbol);
 
-            EXPECT_TRUE(utils_syntax.follow_of(non_terminals.at(i), temp));
-            EXPECT_EQ(temp.size(), follows[i].size());
-            for (const string &st : follows[i]) {
-                EXPECT_TRUE(temp.find(st) != temp.end());
-            }
+            checkTerminalEquality(firsts[i], curr_first);
+            checkTerminalEquality(follows[i], curr_follow);
         }
 
     }

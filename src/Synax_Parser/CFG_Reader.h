@@ -16,6 +16,9 @@ enum class Type {
 struct Symbol {
     std::string name;
     Type type;
+    bool operator==(const Symbol &other_symbol) const {
+        return (name == other_symbol.name && type == other_symbol.type);
+    }
 };
 class CFG_Reader {
     std::unordered_map<std::string, std::vector<std::vector<Symbol>>> productions;
