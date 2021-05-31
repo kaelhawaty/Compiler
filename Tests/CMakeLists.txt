@@ -31,5 +31,6 @@ add_executable(Tests
         ../src/DFA/DFA.h
         ../src/DFA/DFA.cpp
         DFA_tests.cpp
-        )
+        ../src/Syntax_Parser/CFG_Reader.cpp
+        Syntax_parser/CFG_Reader_tests.cpp)
 target_link_libraries(Tests gtest_main)

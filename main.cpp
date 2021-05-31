@@ -31,14 +31,14 @@ int main(int argc, char *argv[])
     outputFile.flush();
     outputFile.close();
     */
-    std::string in = "cfg.txt";
+    std::string in = "cf.txt";
     CFG_Reader parser(in);
     for (auto lhs : parser.rules) {
         std::cout << "From: " << lhs.first << ' ';
         for (auto rhs : lhs.second) {
             std::cout << " Group ";
             for (auto x : rhs) {
-                std::cout << x.name << ' ' << "{ " << (x.type==CFG_Reader::Type::TERMINAL ? "TERMINAL" : "NON_TERMINAL") << " }";
+                std::cout << x.name << ' ' << "{ " << (x.type==CFG_Reader::Type::TERMINAL ? "TERMINAL" : (x.type==CFG_Reader::Type::NON_TERMINAL ? "NON_TERMINAL" : "EPSILON")) << " }";
             }
         }
         std::cout << '\n';
