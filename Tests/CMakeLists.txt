@@ -31,5 +31,7 @@ add_executable(Tests
         ../src/DFA/DFA.h
         ../src/DFA/DFA.cpp
         DFA_tests.cpp
-        )
+        ../src/Synax_Parser/Syntax_Utilization.h
+        ../src/Synax_Parser/Syntax_Utilization.cpp
+        Syntax_Utils_tests.cpp)
 target_link_libraries(Tests gtest_main)
