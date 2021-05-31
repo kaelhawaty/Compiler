@@ -41,10 +41,14 @@ Syntax_Utils::First_set Syntax_Utils::first_of(const Symbol &symbol) {
 }
 
 Syntax_Utils::First_set Syntax_Utils::first_of(const Syntax_Utils::Production& production) {
-    First_set curr_first;
+    First_set curr_first = {eps_symbol};
     for (const Symbol &symbol : production) {
         First_set symbol_first = first_of(symbol);
         curr_first.insert(symbol_first.begin(), symbol_first.end());
+        if (symbol_first.find(eps_symbol) == symbol_first.end()) {
+            curr_first.erase(eps_symbol);
+            break;
+        }
     }
     return curr_first;
 }
@@ -63,6 +67,7 @@ Syntax_Utils::find(std::unordered_map<Symbol, Terminal_set> &set,const Symbol &n
     return it->second;
 }
 
+// Assumption: The rules CAN't have Left recursion, it may lead to undefined behavior if there's any.
 void Syntax_Utils::precompute_first(const Symbol &non_terminal,
                                     const std::unordered_map<std::string, std::vector<Production>> &rules) {
 
@@ -70,7 +75,7 @@ void Syntax_Utils::precompute_first(const Symbol &non_terminal,
     if (this->first.find(non_terminal) != this->first.end()) {
         return;
     }
-    this->first.insert({non_terminal, {}});
+    this->first.insert({non_terminal, {eps_symbol}});
 
     // this type of error could be handled in different ways
     // but for now, we will insert a new rule
@@ -78,7 +83,6 @@ void Syntax_Utils::precompute_first(const Symbol &non_terminal,
     // which makes the first set {Є}.
     if (rules.find(non_terminal.name) == rules.end()) {
         std::cerr << non_terminal.name << " is not defined.\n";
-        this->first.at(non_terminal).insert(eps_symbol);
         // Also initialize its follow set, since it won't be found in the rules map.
         this->follow.insert({non_terminal, {}});
         return;
@@ -119,8 +123,6 @@ void Syntax_Utils::precompute_first(const Symbol &non_terminal,
     // Makes sure if the epsilon should be in the first set or not.
     if (eps_in_first && !add_epsilon) {
         current_first.erase(eps_symbol);
-    } else if (!eps_in_first && add_epsilon) {
-        current_first.insert(eps_symbol);
     }
 }
 
