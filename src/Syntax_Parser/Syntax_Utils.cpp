@@ -22,14 +22,14 @@ Syntax_Utils::Syntax_Utils(const std::unordered_map<Symbol, Rule> &rules,
 }
 
 // Assumption it returns the name of the symbol when the symbol is not non-terminal.
-Syntax_Utils::First_set Syntax_Utils::first_of(const Symbol &symbol) {
+Syntax_Utils::First_set Syntax_Utils::first_of(const Symbol &symbol) const {
     if (symbol.type != Symbol::Type::NON_TERMINAL) {
         return {symbol};
     }
     return Syntax_Utils::find(this->first, symbol);
 }
 
-Syntax_Utils::First_set Syntax_Utils::first_of(const Production& production) {
+Syntax_Utils::First_set Syntax_Utils::first_of(const Production& production) const {
     First_set curr_first = {eps_symbol};
     for (const Symbol &symbol : production) {
         First_set symbol_first = first_of(symbol);
@@ -42,13 +42,13 @@ Syntax_Utils::First_set Syntax_Utils::first_of(const Production& production) {
     return curr_first;
 }
 
-Syntax_Utils::Follow_set Syntax_Utils::follow_of(const Symbol &symbol) {
+Syntax_Utils::Follow_set Syntax_Utils::follow_of(const Symbol &symbol) const {
     assert(symbol.type == Symbol::Type::NON_TERMINAL && "Error: no follow-set for terminal/epsilon symbol");
     return Syntax_Utils::find(this->follow, symbol);
 }
 
 Syntax_Utils::Terminal_set
-Syntax_Utils::find(std::unordered_map<Symbol, Terminal_set> &set,const Symbol &non_terminal) {
+Syntax_Utils::find(const std::unordered_map<Symbol, Terminal_set> &set,const Symbol &non_terminal) {
     auto it = set.find(non_terminal);
     if (it == set.end()) {
         return {};
