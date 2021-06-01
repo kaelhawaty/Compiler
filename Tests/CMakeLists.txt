@@ -33,5 +33,8 @@ add_executable(Tests
         DFA_tests.cpp
         ../src/Syntax_Parser/Syntax_Utils.h
         ../src/Syntax_Parser/Syntax_Utils.cpp
-        Syntax_Utils_tests.cpp)
+        Syntax_Utils_tests.cpp
+        ../src/Syntax_Parser/ParsingTable.h
+        ../src/Syntax_Parser/ParsingTable.cpp
+        ParsingTable_test.cpp)
 target_link_libraries(Tests gtest_main)

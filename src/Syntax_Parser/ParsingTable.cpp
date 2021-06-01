@@ -2,22 +2,29 @@
 // Created by Abd Elkader on 6/1/2021.
 //
 #include <iostream>
-#include "TableBuilder.h"
+#include "ParsingTable.h"
 
-TableBuilder::TableBuilder(const std::unordered_map<Symbol, std::vector<Production>> &rules,
-                           const Syntax_Utils &syntaxUtils):
-                           rules(rules), syntaxUtils(syntaxUtils){
+ParsingTable::ParsingTable(const std::unordered_map<Symbol, std::vector<Production>> &rules,
+                           const Syntax_Utils &syntaxUtils){
 
-    for(const auto &[nonTerminal, productions] : this->rules)
-        addRowToTable(nonTerminal, productions);
+    for(const auto &[nonTerminal, productions] : rules)
+        addRowToTable(nonTerminal, productions,syntaxUtils);
 
 }
 
-std::unordered_map<Symbol, std::unordered_map<Symbol, Production>> TableBuilder::getTable() const {
-    return table;
+bool ParsingTable::hasProduction(const Symbol &nonTerminal, const Symbol &terminal) const {
+    if(table.find(nonTerminal) != table.end()){
+        const std::unordered_map<Symbol,Production> &row = table.at(nonTerminal);
+        return row.find(terminal) != row.end();
+    }
+    return false;
 }
 
-void TableBuilder::addRowToTable(const Symbol &nonTerminal, const std::vector<Production> &productions) {
+Production ParsingTable::getProduction(const Symbol &nonTerminal, const Symbol &terminal) const {
+    return table.at(nonTerminal).at(terminal);
+}
+
+void ParsingTable::addRowToTable(const Symbol &nonTerminal, const std::vector<Production> &productions, const Syntax_Utils &syntaxUtils) {
 
     // store which production to use for the follow set of this non terminal
     Production followProduction = {};
@@ -29,8 +36,8 @@ void TableBuilder::addRowToTable(const Symbol &nonTerminal, const std::vector<Pr
             }else{
                 std::cerr << "More than one production for non_terminal = " << nonTerminal.name << " evaluates to epsilon.\n";
             }
+            productionFirst.erase(eps_symbol);
         }
-        productionFirst.erase(eps_symbol);
         for(auto &terminal : productionFirst){
             addProductionToRow(nonTerminal, terminal, production);
         }
@@ -46,9 +53,10 @@ void TableBuilder::addRowToTable(const Symbol &nonTerminal, const std::vector<Pr
 
 }
 
-void TableBuilder::addProductionToRow(const Symbol &nonTerminal, const Symbol &terminal, const Production &production) {
-    if(table[nonTerminal].find(terminal) == table[nonTerminal].end()){
-        table[nonTerminal][terminal] = production;
+void ParsingTable::addProductionToRow(const Symbol &nonTerminal, const Symbol &terminal, const Production &production) {
+    std::unordered_map<Symbol, Production> &row = table[nonTerminal];
+    if(row.find(terminal) == row.end()){
+        row[terminal] = production;
     }else if(production != SYNC){
         std::cerr << "More than one production at entry of non_terminal = " << nonTerminal.name << " and terminal = " << terminal.name << " .\n";
     }
