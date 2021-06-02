@@ -20,18 +20,20 @@ public:
 
     explicit LexicalParser(const std::string &);
 
-    bool get_next_token(Token &);
+    bool get_token(Token &);
+
+    void next_token();
 
     void set_input_stream(const std::string &);
 
     bool has_grammar_error() const;
 
 private:
+    bool grammar_parsing_error{};
     std::fstream file_stream;
     std::queue<Token> tokenBuffer;
     int line_number{};
     const DFA dfa;
-    bool grammar_parsing_error;
 
     int get_next_line();
 

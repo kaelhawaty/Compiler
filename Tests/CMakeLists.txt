@@ -37,6 +37,10 @@ add_executable(Tests
         ../src/Syntax_Parser/ParsingTable.h
         ../src/Syntax_Parser/ParsingTable.cpp
         ParsingTable_test.cpp
+        Syntax_tests_helper.h
+        Syntax_parser_test.cpp
+        ../src/Syntax_Parser/Syntax_parser.cpp
+        ../src/Syntax_Parser/Syntax_parser.h
         ../src/Syntax_Parser/Rules_builder.cpp
         ../src/Syntax_Parser/Rules_builder.h
         Rules_builder_tests.cpp)

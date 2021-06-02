@@ -64,14 +64,22 @@ bool LexicalParser::has_grammar_error() const {
  * If there's a token, it will be assign it to token parameter then return true,
  * Otherwise return false.
  */
-bool LexicalParser::get_next_token(Token &token) {
+bool LexicalParser::get_token(Token &token) {
     // Make sure that there are more tokens to get.
     if (tokenBuffer.empty() && !get_next_line()) {
         return false;
     }
-    token = std::move(tokenBuffer.front());
-    tokenBuffer.pop();
+    token = tokenBuffer.front();
     return true;
+}
+
+/**
+ * Pops one token from the token buffer.
+ */
+void LexicalParser::next_token() {
+    if(!tokenBuffer.empty()){
+        tokenBuffer.pop();
+    }
 }
 
 /**

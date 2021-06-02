@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS  "-static")
 
-
 add_executable(Compiler
         main.cpp
         src/NFA/NFA.cpp
@@ -29,9 +28,11 @@ add_executable(Compiler
         src/DFA/DFA.h
         src/Syntax_Parser/Rules_builder.cpp
         src/Syntax_Parser/Rules_builder.h
-        src/Syntax_Parser/Syntax_Analyzer.h
+        src/Syntax_Parser/Syntax_definitions.h
         src/Syntax_Parser/Syntax_Utils.cpp
         src/Syntax_Parser/Syntax_Utils.h
         src/Syntax_Parser/ParsingTable.cpp
-        src/Syntax_Parser/ParsingTable.h)
+        src/Syntax_Parser/ParsingTable.h
+        src/Syntax_Parser/Syntax_parser.cpp
+        src/Syntax_Parser/Syntax_parser.h)
 

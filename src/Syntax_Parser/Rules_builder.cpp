@@ -2,6 +2,7 @@
 // Created by hazem on 5/30/2021.
 //
 
+#include <cassert>
 #include "Rules_builder.h"
 
 const char PRODUCTION_SEPARATOR = '|';
@@ -41,6 +42,9 @@ Rules_builder::Rules_builder(const std::string &inputFilePath) : has_error(false
             has_error = true;
         }
     }
+}
+
+void Rules_builder::buildLL1Grammar() {
     eliminate_left_recursion();
 }
 
@@ -93,7 +97,9 @@ Rules_builder::insert_new_definition(std::string &rule_def, std::unordered_map<s
         productions.push_back(std::move(current_prod));
     }
 
-    Rule &rule_lhs = rules[{LHS, Symbol::Type::NON_TERMINAL}];
+    Symbol lhs_sym{LHS, Symbol::Type::NON_TERMINAL};
+    Rule &rule_lhs = rules.insert({lhs_sym, Rule(lhs_sym.name)}).first->second;
+
     rule_lhs.insert(rule_lhs.end(), productions.begin(), productions.end());
     if (start_symbol.name.empty()) {
         start_symbol = {LHS, Symbol::Type::NON_TERMINAL};
@@ -113,7 +119,6 @@ bool Rules_builder::fail() const {
 }
 
 void Rules_builder::eliminate_left_recursion() {
-
     std::vector<Symbol> non_terminals_before;
     for (const auto &[symbol, rule] : rules) {
         non_terminals_before.push_back(symbol);
@@ -123,26 +128,26 @@ void Rules_builder::eliminate_left_recursion() {
             if (current == previous) {
                 break;
             }
-            Rule expanded_rule;
-            for (auto &prod : rules[current]) {
+            Rule expanded_rule(current.name);
+            for (auto &prod : rules.at(current)) {
                 if (is_left_dependent(prod, previous)) {
-                    auto substituted = substitute(prod, rules[previous]);
+                    auto substituted = substitute(prod, rules.at(previous));
                     expanded_rule.insert(expanded_rule.end(), substituted.begin(), substituted.end());
                 } else {
                     expanded_rule.push_back(prod);
                 }
             }
-            rules[current] = expanded_rule;
+            rules.at(current) = expanded_rule;
         }
-        eliminate_immediate_left_recursion(current, rules[current]);
+        eliminate_immediate_left_recursion(rules.at(current));
     }
 }
 
-void Rules_builder::eliminate_immediate_left_recursion(const Symbol &LHS, const std::vector<Production> &RHS) {
-    Rule start_with_LHS;
-    Rule doesnt_start_with_LHS;
-    for (const auto &prod : RHS) {
-        if (is_left_dependent(prod, LHS)) {
+void Rules_builder::eliminate_immediate_left_recursion(Rule &rule) {
+    Rule start_with_LHS{""};
+    Rule doesnt_start_with_LHS{""};
+    for (const auto &prod : rule) {
+        if (is_left_dependent(prod, rule.get_lhs())) {
             start_with_LHS.push_back(prod);
         } else {
             doesnt_start_with_LHS.push_back(prod);
@@ -155,30 +160,31 @@ void Rules_builder::eliminate_immediate_left_recursion(const Symbol &LHS, const 
         std::cerr << "Error: Couldn't eliminate left recursion\n";
         exit(-1);
     }
-    auto &this_rule = rules[LHS];
-    this_rule.clear();
-    Symbol new_LHS = {LHS.name+DASH, Symbol::Type::NON_TERMINAL};
+    rule.clear();
+    Symbol new_LHS = {rule.get_lhs().name+DASH, Symbol::Type::NON_TERMINAL};
     for (auto &prod : doesnt_start_with_LHS) {
         prod.push_back(new_LHS);
-        this_rule.push_back(prod);
+        rule.push_back(prod);
     }
-    auto &new_rule = rules[new_LHS];
-    for (auto &rule : start_with_LHS) {
-        rule.push_back(new_LHS);
-        rule.erase(rule.begin());
-        new_rule.push_back(rule);
+    Rule new_rule{new_LHS.name};
+    for (auto &prod : start_with_LHS) {
+        prod.push_back(new_LHS);
+        prod.erase(prod.begin());
+        new_rule.push_back(prod);
     }
     new_rule.push_back({eps_symbol});
+    rules.insert({new_LHS, new_rule});
 }
 
 bool Rules_builder::is_left_dependent(const Production &prod, const Symbol &prev_non_terminal) {
     return prod.front() == prev_non_terminal;
 }
 
-std::vector<Production> Rules_builder::substitute(Production &curProd, std::vector<Production> prevProd) {
+Rule Rules_builder::substitute(Production &curProd, Rule prevRule) {
     curProd.erase(curProd.begin());
-    for (auto &rule : prevProd) {
+    for (auto &rule : prevRule) {
         rule.insert(rule.end(), curProd.begin(), curProd.end());
     }
-    return prevProd;
+    return prevRule;
 }
+

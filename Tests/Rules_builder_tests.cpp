@@ -4,6 +4,7 @@
 #include <fstream>
 #include "gtest/gtest.h"
 #include "../src/Syntax_Parser/Rules_builder.h"
+#include "Syntax_tests_helper.h"
 
 namespace CFG_Reader_tests {
     class Rules_builder_tests : public ::testing::Test {
@@ -31,16 +32,14 @@ namespace CFG_Reader_tests {
     };
 
     TEST_F(Rules_builder_tests, simpleTest) {
-        writeRules("# A = 'B' '+' 'C'");
+        writeRules("# A = 'b' '+' 'c'");
         Rules_builder reader(tempCFGRulesFilePath);
         ASSERT_TRUE(reader.getRules().size() == 1);
         ASSERT_TRUE(reader.getStartSymbol().name == "A");
         ASSERT_TRUE(reader.getRules().at(reader.getStartSymbol()).size() == 1);
         ASSERT_TRUE(reader.getRules().at(reader.getStartSymbol())[0].size() == 3);
         auto productions = reader.getRules().at(reader.getStartSymbol())[0];
-        Production expected = {{"B", Symbol::Type::TERMINAL},
-                               {"+", Symbol::Type::TERMINAL},
-                               {"C", Symbol::Type::TERMINAL}};
+        Production expected = writeSymbols({"'b'", "'+'", "'c'"});
         ASSERT_TRUE(productions == expected);
     }
 
@@ -60,12 +59,11 @@ namespace CFG_Reader_tests {
         // A --> B A'
         // A' --> a A' | E
         Rules_builder reader(tempCFGRulesFilePath);
+        reader.buildLL1Grammar();
         ASSERT_TRUE(reader.getRules().size() == 2);
         ASSERT_TRUE(reader.getStartSymbol().name == "A");
-        Production expected_A = {{"B", Symbol::Type::NON_TERMINAL},
-                                           {"A\'", Symbol::Type::NON_TERMINAL}};
-        Production expected_A_dash = {{"a", Symbol::Type::NON_TERMINAL},
-                                           {"A\'", Symbol::Type::NON_TERMINAL}};
+        Production expected_A = writeSymbols({"B", "A'"});
+        Production expected_A_dash = writeSymbols({"a", "A'"});
         Symbol A_dash = {reader.getStartSymbol().name+"\'", Symbol::Type::NON_TERMINAL};
         ASSERT_TRUE(reader.getRules().at(reader.getStartSymbol()).size() == 1 && reader.getRules().at(A_dash).size() == 2);
         ASSERT_TRUE(reader.getRules().at(reader.getStartSymbol())[0] == expected_A);
