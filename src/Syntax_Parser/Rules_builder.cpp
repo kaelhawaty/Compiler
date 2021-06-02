@@ -114,34 +114,37 @@ bool Rules_builder::fail() const {
 
 void Rules_builder::eliminate_left_recursion() {
 
-    auto before_elimination = rules;
-    for (auto &i : before_elimination) {
-        for (auto &j : before_elimination) {
-            if (j.first == i.first) {
+    std::vector<Symbol> non_terminals_before;
+    for (const auto &[symbol, rule] : rules) {
+        non_terminals_before.push_back(symbol);
+    }
+    for (const auto &current : non_terminals_before) {
+        for (const auto &previous : non_terminals_before) {
+            if (current == previous) {
                 break;
             }
-            std::vector<Production> expanded_prod;
-            for (auto &prod : i.second) {
-                if (is_left_dependent(prod, j.first.name)) {
-                    auto substituted = substitute(prod, j.second);
-                    expanded_prod.insert(expanded_prod.end(), substituted.begin(), substituted.end());
-                }else {
-                    expanded_prod.push_back(prod);
+            Rule expanded_rule;
+            for (auto &prod : rules[current]) {
+                if (is_left_dependent(prod, previous)) {
+                    auto substituted = substitute(prod, rules[previous]);
+                    expanded_rule.insert(expanded_rule.end(), substituted.begin(), substituted.end());
+                } else {
+                    expanded_rule.push_back(prod);
                 }
             }
-            i.second = expanded_prod;
+            rules[current] = expanded_rule;
         }
-        eliminate_immediate_left_recursion(i.first.name, i.second);
+        eliminate_immediate_left_recursion(current, rules[current]);
     }
 }
 
-void Rules_builder::eliminate_immediate_left_recursion(const std::string &LHS, const std::vector<Production> &RHS) {
-    std::vector<Production> start_with_LHS;
-    std::vector<Production> doesnt_start_with_LHS;
+void Rules_builder::eliminate_immediate_left_recursion(const Symbol &LHS, const std::vector<Production> &RHS) {
+    Rule start_with_LHS;
+    Rule doesnt_start_with_LHS;
     for (const auto &prod : RHS) {
         if (is_left_dependent(prod, LHS)) {
             start_with_LHS.push_back(prod);
-        }else {
+        } else {
             doesnt_start_with_LHS.push_back(prod);
         }
     }
@@ -152,23 +155,24 @@ void Rules_builder::eliminate_immediate_left_recursion(const std::string &LHS, c
         std::cerr << "Error: Couldn't eliminate left recursion\n";
         exit(-1);
     }
-    rules[{LHS, Symbol::Type::NON_TERMINAL}].clear();
-    for(auto &rule : doesnt_start_with_LHS) {
-        rule.push_back({LHS+DASH, Symbol::Type::NON_TERMINAL});
-        rules[{LHS, Symbol::Type::NON_TERMINAL}].push_back(rule);
+    auto &this_rule = rules[LHS];
+    this_rule.clear();
+    Symbol new_LHS = {LHS.name+DASH, Symbol::Type::NON_TERMINAL};
+    for (auto &prod : doesnt_start_with_LHS) {
+        prod.push_back(new_LHS);
+        this_rule.push_back(prod);
     }
-
+    auto &new_rule = rules[new_LHS];
     for (auto &rule : start_with_LHS) {
-        rule.push_back({LHS+DASH, Symbol::Type::NON_TERMINAL});
+        rule.push_back(new_LHS);
         rule.erase(rule.begin());
-        rules[{LHS+DASH, Symbol::Type::NON_TERMINAL}].push_back(rule);
+        new_rule.push_back(rule);
     }
-    rules[{LHS+DASH, Symbol::Type::NON_TERMINAL}].push_back({{"\\L", Symbol::Type::EPSILON}});
-
+    new_rule.push_back({eps_symbol});
 }
 
-bool Rules_builder::is_left_dependent(const Production &prod, const std::string &prev_non_terminal) {
-    return prod.front().name == prev_non_terminal && prod.front().type == Symbol::Type::NON_TERMINAL;
+bool Rules_builder::is_left_dependent(const Production &prod, const Symbol &prev_non_terminal) {
+    return prod.front() == prev_non_terminal;
 }
 
 std::vector<Production> Rules_builder::substitute(Production &curProd, std::vector<Production> prevProd) {

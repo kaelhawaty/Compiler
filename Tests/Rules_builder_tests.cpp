@@ -66,12 +66,11 @@ namespace CFG_Reader_tests {
                                            {"A\'", Symbol::Type::NON_TERMINAL}};
         Production expected_A_dash = {{"a", Symbol::Type::NON_TERMINAL},
                                            {"A\'", Symbol::Type::NON_TERMINAL}};
-        Production Epsilon = {{"\\L", Symbol::Type::EPSILON}};
         Symbol A_dash = {reader.getStartSymbol().name+"\'", Symbol::Type::NON_TERMINAL};
         ASSERT_TRUE(reader.getRules().at(reader.getStartSymbol()).size() == 1 && reader.getRules().at(A_dash).size() == 2);
         ASSERT_TRUE(reader.getRules().at(reader.getStartSymbol())[0] == expected_A);
         ASSERT_TRUE(reader.getRules().at(A_dash)[0] == expected_A_dash);
-        ASSERT_TRUE(reader.getRules().at(A_dash)[1] == Epsilon);
+        ASSERT_TRUE(reader.getRules().at(A_dash)[1][0] == eps_symbol);
 
     }
 }
