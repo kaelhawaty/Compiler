@@ -43,7 +43,7 @@ namespace ParsingTable_tests{
             Symbol nonTerminal = {entry[0],Symbol::Type ::NON_TERMINAL};
             Symbol terminal = {entry[1],Symbol::Type ::TERMINAL};
             EXPECT_TRUE(table.hasProduction(nonTerminal,terminal));
-            Production  production = table.getProduction(nonTerminal,terminal);
+            const Production &production = table.getProduction(nonTerminal,terminal);
             EXPECT_TRUE(production.size() == entry[2].size());
             for(int i=0 ; i< production.size() ; i++){
                 EXPECT_TRUE(production[i].name.size() == 1);
@@ -59,7 +59,7 @@ namespace ParsingTable_tests{
             Symbol nonTerminal = {entry[0],Symbol::Type ::NON_TERMINAL};
             Symbol terminal = {entry[1],Symbol::Type ::TERMINAL};
             EXPECT_TRUE(table.hasProduction(nonTerminal,terminal));
-            Production  production = table.getProduction(nonTerminal,terminal);
+            const Production &production = table.getProduction(nonTerminal,terminal);
             EXPECT_TRUE(production.size() == 1);
             EXPECT_TRUE(production[0] == eps_symbol);
         }
@@ -72,8 +72,8 @@ namespace ParsingTable_tests{
             Symbol nonTerminal = {entry[0],Symbol::Type ::NON_TERMINAL};
             Symbol terminal = {entry[1],Symbol::Type ::TERMINAL};
             EXPECT_TRUE(table.hasProduction(nonTerminal,terminal));
-            Production  production = table.getProduction(nonTerminal,terminal);
-            EXPECT_TRUE(production == SYNC);
+            const Production &production = table.getProduction(nonTerminal,terminal);
+            EXPECT_TRUE(production == SYNC_PRODUCTION);
         }
         std::vector<std::vector<std::string>> errorEntries ={
                 {"E","+"}, {"E","*"},

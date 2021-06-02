@@ -20,7 +20,7 @@ bool ParsingTable::hasProduction(const Symbol &nonTerminal, const Symbol &termin
     return false;
 }
 
-Production ParsingTable::getProduction(const Symbol &nonTerminal, const Symbol &terminal) const {
+const Production& ParsingTable::getProduction(const Symbol &nonTerminal, const Symbol &terminal) const {
     return table.at(nonTerminal).at(terminal);
 }
 
@@ -35,6 +35,7 @@ void ParsingTable::addRowToTable(const Symbol &nonTerminal, const std::vector<Pr
                 followProduction = production;
             }else{
                 std::cerr << "More than one production for non_terminal = " << nonTerminal.name << " evaluates to epsilon.\n";
+                has_error = true;
             }
             productionFirst.erase(eps_symbol);
         }
@@ -44,7 +45,7 @@ void ParsingTable::addRowToTable(const Symbol &nonTerminal, const std::vector<Pr
     }
 
     if(followProduction.empty())
-        followProduction = SYNC;
+        followProduction = SYNC_PRODUCTION;
 
     std::unordered_set<Symbol> nonTerminalFollow = syntaxUtils.follow_of(nonTerminal);
     for(auto &terminal : nonTerminalFollow){
@@ -57,8 +58,13 @@ void ParsingTable::addProductionToRow(const Symbol &nonTerminal, const Symbol &t
     std::unordered_map<Symbol, Production> &row = table[nonTerminal];
     if(row.find(terminal) == row.end()){
         row[terminal] = production;
-    }else if(production != SYNC){
+    }else if(production != SYNC_PRODUCTION){
         std::cerr << "More than one production at entry of non_terminal = " << nonTerminal.name << " and terminal = " << terminal.name << " .\n";
+        has_error = true;
     }
+}
+
+bool ParsingTable::fail() const {
+    return has_error;
 }
 

@@ -39,4 +39,4 @@ using Production = std::vector<Symbol>;
 using Rule = std::vector<Production>;
 
 // The sync production that appears in table entries to indicate synchronizing tokens.
-const Production SYNC = {};
+const Production SYNC_PRODUCTION = {};
