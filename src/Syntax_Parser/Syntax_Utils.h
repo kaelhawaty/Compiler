@@ -30,15 +30,15 @@ public:
      *  @return if the symbol is non-terminal, it will return the FIRST(symbol),
      *  otherwise it will return the symbol name.
      */
-    First_set first_of(const Symbol &);
+    First_set first_of(const Symbol &) const;
 
-    First_set first_of(const Production&);
+    First_set first_of(const Production&) const;
 
     /**
      *  The symbol must be non-terminal symbol.
      *  @return if the symbol is non-terminal, it will return the FOLLOW(symbol).
      */
-    Follow_set follow_of(const Symbol &);
+    Follow_set follow_of(const Symbol &) const;
 
 private:
     std::unordered_map<Symbol, First_set> first;
@@ -81,7 +81,7 @@ private:
      */
     void follow_calculate_by_follow(const std::unordered_map<Symbol, Rule> &);
 
-    static Terminal_set find(std::unordered_map<Symbol, Terminal_set>& ,const Symbol &);
+    static Terminal_set find(const std::unordered_map<Symbol, Terminal_set>& ,const Symbol &);
 
     /**
      * it insert all terminal Symbols from the src to dest,
