@@ -110,3 +110,77 @@ const Symbol &Rules_builder::getStartSymbol() const {
 bool Rules_builder::fail() const {
     return this->has_error;
 }
+
+void Rules_builder::apply_left_factoring() {
+    std::unordered_map<Symbol, Rule> new_rules;
+    for(const auto &rule : this->rules){
+        const std::unordered_map<Symbol, Rule> &factored_rules = left_factor_rule(rule.first, rule.second);
+        new_rules.insert(factored_rules.begin(),factored_rules.end());
+    }
+    this->rules = new_rules;
+}
+
+std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &lhs, const Rule &rule) {
+    std::shared_ptr<Node> root = std::make_shared<Node> ();
+    for(const Production &production : rule)
+        addSymbols(root,production,0);
+
+    std::unordered_map<Symbol, Rule> new_rules;
+    if(root->children.size() == 1){
+        new_rules.insert({lhs,{}});
+        Production new_production = dfs(root->children.begin()->second,new_rules,lhs);
+        new_production.insert(new_production.begin(),root->children.begin()->first);
+        remove_unnecessary_epsilon(new_production);
+        new_rules[lhs] = {move(new_production)};
+    }else{
+        dfs(root,new_rules,lhs);
+    }
+    return new_rules;
+}
+
+void Rules_builder::addSymbols(const std::shared_ptr<Node> &node, const std::vector<Symbol> &symbols, int symbolIndex) {
+    if(symbols.size() == symbolIndex){
+        node->children.insert({eps_symbol, std::make_shared<Node>()});
+        return;
+    }
+
+    if(node->children.find(symbols[symbolIndex]) == node->children.end())
+        node->children.insert({symbols[symbolIndex], std::make_shared<Node>()});
+    addSymbols(node->children[symbols[symbolIndex]], symbols, symbolIndex+1);
+}
+
+std::vector<Symbol> Rules_builder::dfs(const std::shared_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules,
+                                       const Symbol &origin_lhs) {
+    if(node->children.empty())
+        return {};
+
+    if(node->children.size() == 1){
+        std::vector<Symbol> symbols = dfs(node->children.begin()->second,new_rules,origin_lhs);
+        symbols.insert(symbols.begin(),node->children.begin()->first);
+        return symbols;
+    }
+
+    Symbol new_lhs = origin_lhs;
+    if(new_rules.size() >= 1)
+        new_lhs.name += std::to_string(new_rules.size());
+    new_rules.insert({new_lhs,{}});
+
+    Rule new_rule;
+    for(auto &[symbol,child]:node->children){
+        Production new_production = dfs(child,new_rules,origin_lhs);
+        new_production.insert(new_production.begin(),symbol);
+        remove_unnecessary_epsilon(new_production);
+        new_rule.emplace_back(move(new_production));
+    }
+    new_rules[new_lhs] = move(new_rule);
+    return {new_lhs};
+}
+
+void Rules_builder::remove_unnecessary_epsilon(Production &production) {
+    if(production.size() >= 2 && production.back() == eps_symbol)
+        production.pop_back();
+}
+
+
+
+
