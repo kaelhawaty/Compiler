@@ -3,6 +3,7 @@
 //
 #include "gtest/gtest.h"
 #include "../src/Syntax_Parser/ParsingTable.h"
+#include "Syntax_tests_helper.h"
 
 namespace ParsingTable_tests{
 
@@ -14,14 +15,11 @@ namespace ParsingTable_tests{
         //Y  -> *F Y | #
         //F  -> (E) | i
         std::unordered_map<Symbol, Rule> rules = {
-                {{"E", Symbol::Type::NON_TERMINAL}, {{{"T", Symbol::Type::NON_TERMINAL}, {"R", Symbol::Type::NON_TERMINAL}}}},
-                {{"R", Symbol::Type::NON_TERMINAL}, {{{"+", Symbol::Type::TERMINAL}, {"T", Symbol::Type::NON_TERMINAL}, {"R", Symbol::Type::NON_TERMINAL}},
-                                                            {{"Є", Symbol::Type::EPSILON}}}},
-                {{"T", Symbol::Type::NON_TERMINAL}, {{{"F", Symbol::Type::NON_TERMINAL}, {"Y", Symbol::Type::NON_TERMINAL}}}},
-                {{"Y", Symbol::Type::NON_TERMINAL}, {{{"*", Symbol::Type::TERMINAL},{"F", Symbol::Type::NON_TERMINAL}, {"Y", Symbol::Type::NON_TERMINAL}},
-                                                            {{"Є", Symbol::Type::EPSILON}}}},
-                {{"F", Symbol::Type::NON_TERMINAL}, {{{"(", Symbol::Type::TERMINAL}, {"E", Symbol::Type::NON_TERMINAL}, {")", Symbol::Type::TERMINAL}},
-                                                            {{"i", Symbol::Type::TERMINAL}}}}
+                {{"E", Symbol::Type::NON_TERMINAL}, writeRule("E", writeProductions({"T R"}))},
+                {{"R", Symbol::Type::NON_TERMINAL}, writeRule("R", writeProductions({"'+' T R", "#"}))},
+                {{"T", Symbol::Type::NON_TERMINAL}, writeRule("T", writeProductions({"F Y"}))},
+                {{"Y", Symbol::Type::NON_TERMINAL}, writeRule("Y", writeProductions({"'*' F Y", "#"}))},
+                {{"F", Symbol::Type::NON_TERMINAL}, writeRule("F", writeProductions({"'(' E ')'", "'i'"}))}
         };
         Symbol first_symbol = {"E", Symbol::Type::NON_TERMINAL};
         Syntax_Utils utils_syntax(rules, first_symbol);

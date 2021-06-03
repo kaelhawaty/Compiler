@@ -9,7 +9,7 @@
 #include <sstream>
 #include <tuple>
 #include "../Parser/Utils/ParserUtils.h"
-#include "Syntax_Analyzer.h"
+#include "Syntax_definitions.h"
 
 #ifndef COMPILER_CFG_READER_H
 #define COMPILER_CFG_READER_H
@@ -20,6 +20,8 @@
 class Rules_builder {
 public:
     explicit Rules_builder(const std::string &inputFilePath);
+
+    void buildLL1Grammar();
 
     const std::unordered_map<Symbol, Rule> &getRules() const;
 
@@ -32,11 +34,11 @@ private:
 
     void eliminate_left_recursion();
 
-    void eliminate_immediate_left_recursion(const Symbol &LHS, const Rule &RHS);
+    void eliminate_immediate_left_recursion(Rule &rule);
 
-    bool is_left_dependent(const Production &prod, const Symbol &prev_non_terminal);
+    static bool is_left_dependent(const Production &prod, const Symbol &prev_non_terminal);
 
-    Rule substitute(Production &curProd, Rule prevProd);
+    static Rule substitute(Production &curProd, Rule prevRule);
 
     std::unordered_map<Symbol, Rule> rules;
     Symbol start_symbol;

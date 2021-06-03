@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Syntax_Analyzer.h"
+#include "Syntax_definitions.h"
 
 
 class Syntax_Utils {

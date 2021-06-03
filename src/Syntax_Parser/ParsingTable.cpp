@@ -4,7 +4,7 @@
 #include <iostream>
 #include "ParsingTable.h"
 
-ParsingTable::ParsingTable(const std::unordered_map<Symbol, std::vector<Production>> &rules,
+ParsingTable::ParsingTable(const std::unordered_map<Symbol, Rule> &rules,
                            const Syntax_Utils &syntaxUtils){
 
     for(const auto &[nonTerminal, productions] : rules)
@@ -23,6 +23,7 @@ bool ParsingTable::hasProduction(const Symbol &nonTerminal, const Symbol &termin
 const Production& ParsingTable::getProduction(const Symbol &nonTerminal, const Symbol &terminal) const {
     return table.at(nonTerminal).at(terminal);
 }
+
 
 void ParsingTable::addRowToTable(const Symbol &nonTerminal, const std::vector<Production> &productions, const Syntax_Utils &syntaxUtils) {
 
