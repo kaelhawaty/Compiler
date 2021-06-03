@@ -41,6 +41,7 @@ Rules_builder::Rules_builder(const std::string &inputFilePath) : has_error(false
             has_error = true;
         }
     }
+    eliminate_left_recursion();
 }
 
 void
@@ -109,4 +110,75 @@ const Symbol &Rules_builder::getStartSymbol() const {
 
 bool Rules_builder::fail() const {
     return this->has_error;
+}
+
+void Rules_builder::eliminate_left_recursion() {
+
+    std::vector<Symbol> non_terminals_before;
+    for (const auto &[symbol, rule] : rules) {
+        non_terminals_before.push_back(symbol);
+    }
+    for (const auto &current : non_terminals_before) {
+        for (const auto &previous : non_terminals_before) {
+            if (current == previous) {
+                break;
+            }
+            Rule expanded_rule;
+            for (auto &prod : rules[current]) {
+                if (is_left_dependent(prod, previous)) {
+                    auto substituted = substitute(prod, rules[previous]);
+                    expanded_rule.insert(expanded_rule.end(), substituted.begin(), substituted.end());
+                } else {
+                    expanded_rule.push_back(prod);
+                }
+            }
+            rules[current] = expanded_rule;
+        }
+        eliminate_immediate_left_recursion(current, rules[current]);
+    }
+}
+
+void Rules_builder::eliminate_immediate_left_recursion(const Symbol &LHS, const std::vector<Production> &RHS) {
+    Rule start_with_LHS;
+    Rule doesnt_start_with_LHS;
+    for (const auto &prod : RHS) {
+        if (is_left_dependent(prod, LHS)) {
+            start_with_LHS.push_back(prod);
+        } else {
+            doesnt_start_with_LHS.push_back(prod);
+        }
+    }
+    if (start_with_LHS.empty()) {
+        return;
+    }
+    if (doesnt_start_with_LHS.empty()) {
+        std::cerr << "Error: Couldn't eliminate left recursion\n";
+        exit(-1);
+    }
+    auto &this_rule = rules[LHS];
+    this_rule.clear();
+    Symbol new_LHS = {LHS.name+DASH, Symbol::Type::NON_TERMINAL};
+    for (auto &prod : doesnt_start_with_LHS) {
+        prod.push_back(new_LHS);
+        this_rule.push_back(prod);
+    }
+    auto &new_rule = rules[new_LHS];
+    for (auto &rule : start_with_LHS) {
+        rule.push_back(new_LHS);
+        rule.erase(rule.begin());
+        new_rule.push_back(rule);
+    }
+    new_rule.push_back({eps_symbol});
+}
+
+bool Rules_builder::is_left_dependent(const Production &prod, const Symbol &prev_non_terminal) {
+    return prod.front() == prev_non_terminal;
+}
+
+std::vector<Production> Rules_builder::substitute(Production &curProd, std::vector<Production> prevProd) {
+    curProd.erase(curProd.begin());
+    for (auto &rule : prevProd) {
+        rule.insert(rule.end(), curProd.begin(), curProd.end());
+    }
+    return prevProd;
 }

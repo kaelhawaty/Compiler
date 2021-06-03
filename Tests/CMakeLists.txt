@@ -36,5 +36,8 @@ add_executable(Tests
         Syntax_Utils_tests.cpp
         ../src/Syntax_Parser/ParsingTable.h
         ../src/Syntax_Parser/ParsingTable.cpp
-        ParsingTable_test.cpp)
+        ParsingTable_test.cpp
+        ../src/Syntax_Parser/Rules_builder.cpp
+        ../src/Syntax_Parser/Rules_builder.h
+        Rules_builder_tests.cpp)
 target_link_libraries(Tests gtest_main)

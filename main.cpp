@@ -3,6 +3,8 @@
 #include "src/Parser/Utils/ParserUtils.h"
 #include "src/Parser/LexicalParser.h"
 #include "src/Syntax_Parser/Rules_builder.h"
+
+
 int main(int argc, char *argv[])
 {
     /*
@@ -39,6 +41,7 @@ int main(int argc, char *argv[])
             std::cout << " Group ";
             for (const auto &x : rhs) {
                 std::cout << x.name << ' ' << "{ " << (x.type==Symbol::Type::TERMINAL ? "TERMINAL" : (x.type==Symbol::Type::NON_TERMINAL ? "NON_TERMINAL" : "EPSILON")) << " }";
+
             }
         }
         std::cout << '\n';
