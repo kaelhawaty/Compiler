@@ -40,7 +40,7 @@ private:
 
     void apply_left_factoring();
     std::unordered_map<Symbol, Rule> left_factor_rule(const Symbol &lhs,const Rule &rule);
-    void addSymbols(const std::shared_ptr<Node> &node, const std::vector<Symbol> &symbols, int symbolIndex);
+    void addProduction(std::shared_ptr<Node> node, const Production &production);
     std::vector<Symbol> dfs(const std::shared_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules, const Symbol &origin_lhs);
     void remove_unnecessary_epsilon(Production &production);
 

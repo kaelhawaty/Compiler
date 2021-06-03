@@ -110,7 +110,10 @@ const Symbol &Rules_builder::getStartSymbol() const {
 bool Rules_builder::fail() const {
     return this->has_error;
 }
-
+/*
+ * left factoring is applied on each Rule independently.
+ * Each Rule is converted to multiple rules that represent the new rules.
+ */
 void Rules_builder::apply_left_factoring() {
     std::unordered_map<Symbol, Rule> new_rules;
     for(const auto &rule : this->rules){
@@ -119,55 +122,71 @@ void Rules_builder::apply_left_factoring() {
     }
     this->rules = std::move(new_rules);
 }
-
+/*
+ * To factor a single Rule.
+ * 1- Build a trie for all productions present in the Rule.
+ * 2- Traverse the trie and add new rules when needed.
+ */
 std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &lhs, const Rule &rule) {
     std::shared_ptr<Node> root = std::make_shared<Node> ();
+    // building the trie by adding each production symbols to it.
     for(const Production &production : rule)
-        addSymbols(root,production,0);
+        addProduction(root,production);
 
+    //this will store the new rules generated from factoring given rule
     std::unordered_map<Symbol, Rule> new_rules;
     if(root->children.size() == 1){
+        // This a special case when the root contains one child.
+        // We must add the first rule here from the return value from dfs call.
         new_rules.insert({lhs,{}});
-        Production new_production = dfs(root->children.begin()->second,new_rules,lhs);
-        new_production.insert(new_production.begin(),root->children.begin()->first);
+        Production new_production = dfs(root,new_rules,lhs);
         remove_unnecessary_epsilon(new_production);
-        new_rules[lhs] = {std::move(new_production)};
+        new_rules[lhs] = {move(new_production)};
     }else{
         dfs(root,new_rules,lhs);
     }
     return new_rules;
 }
 
-void Rules_builder::addSymbols(const std::shared_ptr<Node> &node, const std::vector<Symbol> &symbols, int symbolIndex) {
-    if(symbols.size() == symbolIndex){
-        node->children.insert({eps_symbol, std::make_shared<Node>()});
-        return;
+// add a production to the trie by adding its symbols to corresponding nodes.
+void Rules_builder::addProduction(std::shared_ptr <Node> node, const Production &production) {
+    for(const auto &symbol : production){
+        if(node->children.find(symbol) == node->children.end())
+            node->children.insert({symbol, std::make_shared<Node>()});
+        node = node->children[symbol];
     }
-
-    if(node->children.find(symbols[symbolIndex]) == node->children.end())
-        node->children.insert({symbols[symbolIndex], std::make_shared<Node>()});
-    addSymbols(node->children[symbols[symbolIndex]], symbols, symbolIndex+1);
+    // add epsilon at the end of every production to mark leaf nodes.
+    // handle the case when one production is prefix of another.
+    node->children.insert({eps_symbol, std::make_shared<Node>()});
 }
-
+// dfs the whole trie and add a rule for every node with more than one child
 std::vector<Symbol> Rules_builder::dfs(const std::shared_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules,
                                        const Symbol &origin_lhs) {
+    // base case when reaching leaf node.
     if(node->children.empty())
         return {};
 
+    // if node has only one child no need to add new rule.
+    // Just continue the dfs and the child as prefix to the returned value.
     if(node->children.size() == 1){
         std::vector<Symbol> symbols = dfs(node->children.begin()->second,new_rules,origin_lhs);
         symbols.insert(symbols.begin(),node->children.begin()->first);
         return symbols;
     }
 
+    // if more than one child is present, we need to add a rule where each child will have a production in this rule.
     Symbol new_lhs = origin_lhs;
+    //The new Rule lhs is determined from the new_rules current size to have a unique lhs for each rule (A, A1, A2, ...)
     if(new_rules.size() >= 1)
         new_lhs.name += std::to_string(new_rules.size());
     new_rules.insert({new_lhs,{}});
 
+
     Rule new_rule;
     for(auto &[symbol,child]:node->children){
+        // Get the rest of the production for this child.
         Production new_production = dfs(child,new_rules,origin_lhs);
+        // Add child symbol as prefix for the production.
         new_production.insert(new_production.begin(),symbol);
         remove_unnecessary_epsilon(new_production);
         new_rule.emplace_back(std::move(new_production));
@@ -176,11 +195,13 @@ std::vector<Symbol> Rules_builder::dfs(const std::shared_ptr<Node> &node, std::u
     return {new_lhs};
 }
 
+// Remove the epsilon added to mark leaf nodes if it unnecessary.
+// It is kept when one production is prefix of another
+// Example : A -> a | ab
+// After   : A -> aA1
+//          A1 -> b | Є
 void Rules_builder::remove_unnecessary_epsilon(Production &production) {
     if(production.size() >= 2 && production.back() == eps_symbol)
         production.pop_back();
 }
-
-
-
 
