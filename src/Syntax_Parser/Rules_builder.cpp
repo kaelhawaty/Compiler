@@ -117,7 +117,7 @@ void Rules_builder::apply_left_factoring() {
         const std::unordered_map<Symbol, Rule> &factored_rules = left_factor_rule(rule.first, rule.second);
         new_rules.insert(factored_rules.begin(),factored_rules.end());
     }
-    this->rules = new_rules;
+    this->rules = std::move(new_rules);
 }
 
 std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &lhs, const Rule &rule) {
@@ -131,7 +131,7 @@ std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &l
         Production new_production = dfs(root->children.begin()->second,new_rules,lhs);
         new_production.insert(new_production.begin(),root->children.begin()->first);
         remove_unnecessary_epsilon(new_production);
-        new_rules[lhs] = {move(new_production)};
+        new_rules[lhs] = {std::move(new_production)};
     }else{
         dfs(root,new_rules,lhs);
     }
@@ -170,9 +170,9 @@ std::vector<Symbol> Rules_builder::dfs(const std::shared_ptr<Node> &node, std::u
         Production new_production = dfs(child,new_rules,origin_lhs);
         new_production.insert(new_production.begin(),symbol);
         remove_unnecessary_epsilon(new_production);
-        new_rule.emplace_back(move(new_production));
+        new_rule.emplace_back(std::move(new_production));
     }
-    new_rules[new_lhs] = move(new_rule);
+    new_rules[new_lhs] = std::move(new_rule);
     return {new_lhs};
 }
 
