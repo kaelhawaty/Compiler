@@ -85,7 +85,7 @@ void ParsingTable::writeToCSV(const std::string &fileName) {
     firstRow.reserve(terminals.size()+1);
     firstRow.push_back("");
     for(const auto& symbol : terminals)
-        firstRow.push_back(symbol.name);
+        firstRow.push_back("'" + symbol.name + "'");
     writeRowToCSV(firstRow,tableFile);
 
     for(const auto &[nonTerminal,row] : this->table){
@@ -114,7 +114,11 @@ std::string ParsingTable::toString(const Production &production) {
         return "SYNC";
 
     std::string text;
-    for(const auto& symbol : production)
-        text += symbol.name;
+    for(const auto& symbol : production){
+        if(symbol.type == Symbol::Type::TERMINAL)
+            text += ("'" + symbol.name + "' ");
+        else
+            text += (symbol.name + " ");
+    }
     return text;
 }
