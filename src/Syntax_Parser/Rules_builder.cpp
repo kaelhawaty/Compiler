@@ -2,6 +2,7 @@
 // Created by hazem on 5/30/2021.
 //
 
+#include <algorithm>
 #include "Rules_builder.h"
 
 const char PRODUCTION_SEPARATOR = '|';
@@ -128,10 +129,10 @@ void Rules_builder::apply_left_factoring() {
  * 2- Traverse the trie and add new rules when needed.
  */
 std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &lhs, const Rule &rule) {
-    std::shared_ptr<Node> root = std::make_shared<Node> ();
+    std::unique_ptr<Node> root = std::make_unique<Node> ();
     // building the trie by adding each production symbols to it.
     for(const Production &production : rule)
-        addProduction(root,production);
+        addProduction(root.get(), production);
 
     //this will store the new rules generated from factoring given rule
     std::unordered_map<Symbol, Rule> new_rules;
@@ -140,8 +141,8 @@ std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &l
         // We must add the first rule here from the return value from dfs call.
         new_rules.insert({lhs,{}});
         Production new_production = dfs(root,new_rules,lhs);
-        remove_unnecessary_epsilon(new_production);
-        new_rules[lhs] = {move(new_production)};
+        reformat_production(new_production);
+        new_rules[lhs] = {std::move(new_production)};
     }else{
         dfs(root,new_rules,lhs);
     }
@@ -149,28 +150,28 @@ std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &l
 }
 
 // add a production to the trie by adding its symbols to corresponding nodes.
-void Rules_builder::addProduction(std::shared_ptr <Node> node, const Production &production) {
+void Rules_builder::addProduction(Node* node, const Production &production) {
     for(const auto &symbol : production){
         if(node->children.find(symbol) == node->children.end())
-            node->children.insert({symbol, std::make_shared<Node>()});
-        node = node->children[symbol];
+            node->children.insert({symbol, std::make_unique<Node>()});
+        node = node->children[symbol].get();
     }
     // add epsilon at the end of every production to mark leaf nodes.
     // handle the case when one production is prefix of another.
-    node->children.insert({eps_symbol, std::make_shared<Node>()});
+    node->children.insert({eps_symbol, std::make_unique<Node>()});
 }
-// dfs the whole trie and add a rule for every node with more than one child
-std::vector<Symbol> Rules_builder::dfs(const std::shared_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules,
+// dfs the whole trie and add a rule for every node with more than one child.
+std::vector<Symbol> Rules_builder::dfs(const std::unique_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules,
                                        const Symbol &origin_lhs) {
     // base case when reaching leaf node.
     if(node->children.empty())
         return {};
 
     // if node has only one child no need to add new rule.
-    // Just continue the dfs and the child as prefix to the returned value.
+    // Just continue the dfs and the child to be a prefix to the returned value when reversed.
     if(node->children.size() == 1){
         std::vector<Symbol> symbols = dfs(node->children.begin()->second,new_rules,origin_lhs);
-        symbols.insert(symbols.begin(),node->children.begin()->first);
+        symbols.push_back(node->children.begin()->first);
         return symbols;
     }
 
@@ -183,24 +184,25 @@ std::vector<Symbol> Rules_builder::dfs(const std::shared_ptr<Node> &node, std::u
 
 
     Rule new_rule;
-    for(auto &[symbol,child]:node->children){
+    for(const auto &[symbol,child]:node->children){
         // Get the rest of the production for this child.
         Production new_production = dfs(child,new_rules,origin_lhs);
-        // Add child symbol as prefix for the production.
-        new_production.insert(new_production.begin(),symbol);
-        remove_unnecessary_epsilon(new_production);
+        // Add child symbol to be a prefix for the production when reversed.
+        new_production.push_back(symbol);
+        reformat_production(new_production);
         new_rule.emplace_back(std::move(new_production));
     }
     new_rules[new_lhs] = std::move(new_rule);
     return {new_lhs};
 }
 
-// Remove the epsilon added to mark leaf nodes if it unnecessary.
+// Reverse the production and Remove the epsilon added to mark leaf nodes if it unnecessary.
 // It is kept when one production is prefix of another
 // Example : A -> a | ab
 // After   : A -> aA1
 //          A1 -> b | Є
-void Rules_builder::remove_unnecessary_epsilon(Production &production) {
+void Rules_builder::reformat_production(Production &production) {
+    std::reverse(production.begin(),production.end());
     if(production.size() >= 2 && production.back() == eps_symbol)
         production.pop_back();
 }

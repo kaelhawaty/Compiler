@@ -35,13 +35,13 @@ private:
     Symbol start_symbol;
     bool has_error;
     struct Node{
-        std::unordered_map<Symbol,std::shared_ptr<Node>> children;
+        std::unordered_map<Symbol,std::unique_ptr<Node>> children;
     };
 
     void apply_left_factoring();
     std::unordered_map<Symbol, Rule> left_factor_rule(const Symbol &lhs,const Rule &rule);
-    void addProduction(std::shared_ptr<Node> node, const Production &production);
-    std::vector<Symbol> dfs(const std::shared_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules, const Symbol &origin_lhs);
-    void remove_unnecessary_epsilon(Production &production);
+    void addProduction(Node* node, const Production &production);
+    std::vector<Symbol> dfs(const std::unique_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules, const Symbol &origin_lhs);
+    void reformat_production(Production &production);
 
 };
