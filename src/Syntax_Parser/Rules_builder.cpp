@@ -3,6 +3,7 @@
 //
 
 #include <algorithm>
+#include <cassert>
 #include "Rules_builder.h"
 
 const char PRODUCTION_SEPARATOR = '|';
@@ -42,6 +43,10 @@ Rules_builder::Rules_builder(const std::string &inputFilePath) : has_error(false
             has_error = true;
         }
     }
+}
+
+void Rules_builder::buildLL1Grammar() {
+    eliminate_left_recursion();
 }
 
 void
@@ -93,7 +98,9 @@ Rules_builder::insert_new_definition(std::string &rule_def, std::unordered_map<s
         productions.push_back(std::move(current_prod));
     }
 
-    Rule &rule_lhs = rules[{LHS, Symbol::Type::NON_TERMINAL}];
+    Symbol lhs_sym{LHS, Symbol::Type::NON_TERMINAL};
+    Rule &rule_lhs = rules.insert({lhs_sym, Rule(lhs_sym.name)}).first->second;
+
     rule_lhs.insert(rule_lhs.end(), productions.begin(), productions.end());
     if (start_symbol.name.empty()) {
         start_symbol = {LHS, Symbol::Type::NON_TERMINAL};
@@ -205,5 +212,75 @@ void Rules_builder::reformat_production(Production &production) {
     std::reverse(production.begin(),production.end());
     if(production.size() >= 2 && production.back() == eps_symbol)
         production.pop_back();
+}
+
+void Rules_builder::eliminate_left_recursion() {
+    std::vector<Symbol> non_terminals_before;
+    for (const auto &[symbol, rule] : rules) {
+        non_terminals_before.push_back(symbol);
+    }
+    for (const auto &current : non_terminals_before) {
+        for (const auto &previous : non_terminals_before) {
+            if (current == previous) {
+                break;
+            }
+            Rule expanded_rule(current.name);
+            for (auto &prod : rules.at(current)) {
+                if (is_left_dependent(prod, previous)) {
+                    auto substituted = substitute(prod, rules.at(previous));
+                    expanded_rule.insert(expanded_rule.end(), substituted.begin(), substituted.end());
+                } else {
+                    expanded_rule.push_back(prod);
+                }
+            }
+            rules.at(current) = expanded_rule;
+        }
+        eliminate_immediate_left_recursion(rules.at(current));
+    }
+}
+
+void Rules_builder::eliminate_immediate_left_recursion(Rule &rule) {
+    Rule start_with_LHS{""};
+    Rule doesnt_start_with_LHS{""};
+    for (const auto &prod : rule) {
+        if (is_left_dependent(prod, rule.get_lhs())) {
+            start_with_LHS.push_back(prod);
+        } else {
+            doesnt_start_with_LHS.push_back(prod);
+        }
+    }
+    if (start_with_LHS.empty()) {
+        return;
+    }
+    if (doesnt_start_with_LHS.empty()) {
+        std::cerr << "Error: Couldn't eliminate left recursion\n";
+        exit(-1);
+    }
+    rule.clear();
+    Symbol new_LHS = {rule.get_lhs().name+DASH, Symbol::Type::NON_TERMINAL};
+    for (auto &prod : doesnt_start_with_LHS) {
+        prod.push_back(new_LHS);
+        rule.push_back(prod);
+    }
+    Rule new_rule{new_LHS.name};
+    for (auto &prod : start_with_LHS) {
+        prod.push_back(new_LHS);
+        prod.erase(prod.begin());
+        new_rule.push_back(prod);
+    }
+    new_rule.push_back({eps_symbol});
+    rules.insert({new_LHS, new_rule});
+}
+
+bool Rules_builder::is_left_dependent(const Production &prod, const Symbol &prev_non_terminal) {
+    return prod.front() == prev_non_terminal;
+}
+
+Rule Rules_builder::substitute(Production &curProd, Rule prevRule) {
+    curProd.erase(curProd.begin());
+    for (auto &rule : prevRule) {
+        rule.insert(rule.end(), curProd.begin(), curProd.end());
+    }
+    return prevRule;
 }
 

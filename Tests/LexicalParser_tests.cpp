@@ -53,11 +53,13 @@ namespace Parser_tests {
         EXPECT_FALSE(lexicalParser.has_grammar_error());
         lexicalParser.set_input_stream(R"(..\..\Tests\Input_samples\program_input.txt)");
         std::vector<std::string> ExpectedTokens{"int", "id", ",", "id", ",", "id", ",", "id", ";", "while", "(", "id",
-                                                "relop", "num", ")", "{", "id", "assign", "id", "addop", "num", ";", "}"};
+                                                "relop", "num", ")", "{", "id", "assign", "id", "addop", "num", ";",
+                                                "}"};
 
         for (const auto &ExpectedToken : ExpectedTokens) {
             Token token;
-            ASSERT_TRUE(lexicalParser.get_next_token(token));
+            ASSERT_TRUE(lexicalParser.get_token(token));
+            lexicalParser.next_token();
             EXPECT_EQ(token.regEXP, ExpectedToken);
         }
     }
@@ -75,7 +77,8 @@ namespace Parser_tests {
 
         for (const auto &expected : expectedTokens) {
             Token token;
-            ASSERT_TRUE(lexicalParser.get_next_token(token));
+            ASSERT_TRUE(lexicalParser.get_token(token));
+            lexicalParser.next_token();
             EXPECT_EQ(token.regEXP, expected.regEXP);
             EXPECT_EQ(token.match_string, expected.match_string);
         }
@@ -94,7 +97,8 @@ namespace Parser_tests {
 
         for (const auto &expected : expectedTokens) {
             Token token;
-            ASSERT_TRUE(lexicalParser.get_next_token(token));
+            ASSERT_TRUE(lexicalParser.get_token(token));
+            lexicalParser.next_token();
             EXPECT_EQ(token.regEXP, expected.regEXP);
             EXPECT_EQ(token.match_string, expected.match_string);
         }
@@ -113,7 +117,8 @@ namespace Parser_tests {
 
         for (const auto &expected : expectedTokens) {
             Token token;
-            ASSERT_TRUE(lexicalParser.get_next_token(token));
+            ASSERT_TRUE(lexicalParser.get_token(token));
+            lexicalParser.next_token();
             EXPECT_EQ(token.regEXP, expected.regEXP);
             EXPECT_EQ(token.match_string, expected.match_string);
         }
@@ -131,7 +136,8 @@ namespace Parser_tests {
 
         for (const auto &expected : expectedTokens) {
             Token token;
-            ASSERT_TRUE(lexicalParser.get_next_token(token));
+            ASSERT_TRUE(lexicalParser.get_token(token));
+            lexicalParser.next_token();
             EXPECT_EQ(token.regEXP, expected.regEXP);
             EXPECT_EQ(token.match_string, expected.match_string);
         }
@@ -149,7 +155,8 @@ namespace Parser_tests {
 
         for (const auto &expected : expectedTokens) {
             Token token;
-            ASSERT_TRUE(lexicalParser.get_next_token(token));
+            ASSERT_TRUE(lexicalParser.get_token(token));
+            lexicalParser.next_token();
             EXPECT_EQ(token.regEXP, expected.regEXP);
             EXPECT_EQ(token.match_string, expected.match_string);
         }
@@ -164,7 +171,7 @@ namespace Parser_tests {
         lexicalParser.set_input_stream(tempProgramPath);
 
         Token token;
-        EXPECT_FALSE(lexicalParser.get_next_token(token));
+        EXPECT_FALSE(lexicalParser.get_token(token));
     }
 
     TEST_F(LexicalParserTest, HbeedChecker) {
@@ -183,7 +190,8 @@ namespace Parser_tests {
 
         for (const auto &expected : expectedTokens) {
             Token token;
-            ASSERT_TRUE(lexicalParser.get_next_token(token));
+            ASSERT_TRUE(lexicalParser.get_token(token));
+            lexicalParser.next_token();
             EXPECT_EQ(token.regEXP, expected.regEXP);
             EXPECT_EQ(token.match_string, expected.match_string);
         }
@@ -198,13 +206,14 @@ namespace Parser_tests {
         lexicalParser.set_input_stream(tempProgramPath);
 
         std::vector<Token> expectedTokens{
-                {"digits","2387"},
-                {"digits","1515"},
-                {"digits","1551"}};
+                {"digits", "2387"},
+                {"digits", "1515"},
+                {"digits", "1551"}};
 
         for (const auto &expected : expectedTokens) {
             Token token;
-            ASSERT_TRUE(lexicalParser.get_next_token(token));
+            ASSERT_TRUE(lexicalParser.get_token(token));
+            lexicalParser.next_token();
             EXPECT_EQ(token.regEXP, expected.regEXP);
             EXPECT_EQ(token.match_string, expected.match_string);
         }

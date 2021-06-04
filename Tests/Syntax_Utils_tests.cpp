@@ -4,6 +4,7 @@
 
 #include "gtest/gtest.h"
 #include "../src/Syntax_Parser/Syntax_Utils.h"
+#include "Syntax_tests_helper.h"
 
 
 namespace Syntax_Utils_tests {
@@ -17,28 +18,25 @@ namespace Syntax_Utils_tests {
 
     TEST(FirstFollowConstruction, sample1) {
         //Input :
-        //E  -> TR
-        //R  -> +T R| #
+        //E  -> T R
+        //R  -> '+' T R| #
         //T  -> F Y
-        //Y  -> *F Y | #
-        //F  -> (E) | i
+        //Y  -> '*' F Y | #
+        //F  -> '(' E ')' | 'i'
         std::unordered_map<Symbol, Rule> rules = {
-                {{"E", Symbol::Type::NON_TERMINAL}, {{{"T", Symbol::Type::NON_TERMINAL}, {"R", Symbol::Type::NON_TERMINAL}}}},
-                {{"R", Symbol::Type::NON_TERMINAL}, {{{"+", Symbol::Type::TERMINAL}, {"T", Symbol::Type::NON_TERMINAL}, {"R", Symbol::Type::NON_TERMINAL}},
-                              {{"Є", Symbol::Type::EPSILON}}}},
-                {{"T", Symbol::Type::NON_TERMINAL}, {{{"F", Symbol::Type::NON_TERMINAL}, {"Y", Symbol::Type::NON_TERMINAL}}}},
-                {{"Y", Symbol::Type::NON_TERMINAL}, {{{"*", Symbol::Type::TERMINAL},{"F", Symbol::Type::NON_TERMINAL}, {"Y", Symbol::Type::NON_TERMINAL}},
-                              {{"Є", Symbol::Type::EPSILON}}}},
-                {{"F", Symbol::Type::NON_TERMINAL}, {{{"(", Symbol::Type::TERMINAL}, {"E", Symbol::Type::NON_TERMINAL}, {")", Symbol::Type::TERMINAL}},
-                              {{"i", Symbol::Type::TERMINAL}}}}
+                {{"E", Symbol::Type::NON_TERMINAL}, writeRule("E", writeProductions({"T R"}))},
+                {{"R", Symbol::Type::NON_TERMINAL}, writeRule("R", writeProductions({"'+' T R", "#"}))},
+                {{"T", Symbol::Type::NON_TERMINAL}, writeRule("T", writeProductions({"F Y"}))},
+                {{"Y", Symbol::Type::NON_TERMINAL}, writeRule("Y", writeProductions({"'*' F Y", "#"}))},
+                {{"F", Symbol::Type::NON_TERMINAL}, writeRule("F", writeProductions({"'(' E ')'", "'i'"}))}
         };
         Symbol first_symbol = {"E", Symbol::Type::NON_TERMINAL};
         Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"E", "R", "T", "Y", "F"};
         std::vector<std::unordered_set<std::string>> firsts = {{"(", "i"},
-                                                               {"+", "Є"},
+                                                               {"+", "#"},
                                                                {"(", "i"},
-                                                               {"*", "Є"},
+                                                               {"*", "#"},
                                                                {"(", "i"}};
 
         std::vector<std::unordered_set<std::string>> follows = {{"$", ")"},
@@ -58,32 +56,29 @@ namespace Syntax_Utils_tests {
     }
 
     TEST(FirstFollowConstruction, sample2) {
-        //S -> aBDh
-        //B -> cC
-        //C -> bC | Є
-        //D -> EF
-        //E -> g | Є
-        //F -> f | Є
+        //S -> 'a' B D h
+        //B -> 'c' C
+        //C -> 'b' C | #
+        //D -> E F
+        //E -> 'g' | #
+        //F -> 'f' | #
         std::unordered_map<Symbol, Rule> rules = {
-                {{"S", Symbol::Type::NON_TERMINAL}, {{{"a", Symbol::Type::TERMINAL}, {"B", Symbol::Type::NON_TERMINAL}, {"D", Symbol::Type::NON_TERMINAL}, {"h", Symbol::Type::TERMINAL}}}},
-                {{"B", Symbol::Type::NON_TERMINAL}, {{{"c", Symbol::Type::TERMINAL}, {"C", Symbol::Type::NON_TERMINAL}}}},
-                {{"C", Symbol::Type::NON_TERMINAL}, {{{"b", Symbol::Type::TERMINAL}, {"C", Symbol::Type::NON_TERMINAL}},
-                              {{"Є", Symbol::Type::EPSILON}}}},
-                {{"D", Symbol::Type::NON_TERMINAL}, {{{"E", Symbol::Type::NON_TERMINAL}, {"F", Symbol::Type::NON_TERMINAL}}}},
-                {{"E", Symbol::Type::NON_TERMINAL}, {{{"g", Symbol::Type::TERMINAL}},
-                              {{"Є", Symbol::Type::EPSILON}}}},
-                {{"F", Symbol::Type::NON_TERMINAL}, {{{"f", Symbol::Type::TERMINAL}},
-                              {{"Є", Symbol::Type::EPSILON}}}}
+                {{"S", Symbol::Type::NON_TERMINAL}, writeRule("S", writeProductions({"'a' B D 'h'"}))},
+                {{"B", Symbol::Type::NON_TERMINAL}, writeRule("B", writeProductions({"'c' C"}))},
+                {{"C", Symbol::Type::NON_TERMINAL}, writeRule("C", writeProductions({"'b' C", "#"}))},
+                {{"D", Symbol::Type::NON_TERMINAL}, writeRule("D", writeProductions({"E F"}))},
+                {{"E", Symbol::Type::NON_TERMINAL}, writeRule("E", writeProductions({"'g'", "#"}))},
+                {{"F", Symbol::Type::NON_TERMINAL}, writeRule("F", writeProductions({"'f'", "#"}))}
         };
         Symbol first_symbol = {"S", Symbol::Type::NON_TERMINAL};
         Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"S", "B", "C", "D", "E", "F"};
         std::vector<std::unordered_set<std::string>> firsts = {{"a"},
                                                                {"c"},
-                                                               {"b", "Є"},
-                                                               {"g", "f", "Є"},
-                                                               {"g", "Є"},
-                                                               {"f", "Є"}};
+                                                               {"b", "#"},
+                                                               {"g", "f", "#"},
+                                                               {"g", "#"},
+                                                               {"f", "#"}};
 
         std::vector<std::unordered_set<std::string>> follows = {{"$"},
                                                                 {"g", "f", "h"},
@@ -103,28 +98,23 @@ namespace Syntax_Utils_tests {
     }
 
     TEST(FirstFollowConstruction, adding_undefined_non_terminal) {
-        //S -> ACB|Cbb|Ba
-        //A -> da|BC
-        //B-> g|Є
-        //C-> h| Є
+        //S -> A C B | C 'b' 'b' | B 'a'
+        //A -> 'd' 'a'| B C
+        //B-> 'g' | #
+        //C-> 'h' | #
         std::unordered_map<Symbol, Rule> rules = {
-                {{"S", Symbol::Type::NON_TERMINAL}, {{{"A", Symbol::Type::NON_TERMINAL}, {"C", Symbol::Type::NON_TERMINAL}, {"B", Symbol::Type::NON_TERMINAL}},
-                              {{"C", Symbol::Type::NON_TERMINAL}, {"b", Symbol::Type::TERMINAL}, {"b", Symbol::Type::TERMINAL}},
-                              {{"B", Symbol::Type::NON_TERMINAL}, {"a", Symbol::Type::TERMINAL}}}},
-                {{"A", Symbol::Type::NON_TERMINAL}, {{{"d", Symbol::Type::TERMINAL}, {"a", Symbol::Type::TERMINAL}},
-                              {{"B", Symbol::Type::NON_TERMINAL}, {"C", Symbol::Type::NON_TERMINAL}}}},
-                {{"B", Symbol::Type::NON_TERMINAL}, {{{"g", Symbol::Type::TERMINAL}},
-                              {{"Є", Symbol::Type::EPSILON}}}},
-                {{"C", Symbol::Type::NON_TERMINAL}, {{{"h", Symbol::Type::TERMINAL}},
-                              {{"Є", Symbol::Type::EPSILON}}}}
+                {{"S", Symbol::Type::NON_TERMINAL}, writeRule("S", writeProductions({"A B C", "C 'b' 'b'", "B 'a'"}))},
+                {{"A", Symbol::Type::NON_TERMINAL}, writeRule("A", writeProductions({"'d' 'a'", "B C"}))},
+                {{"B", Symbol::Type::NON_TERMINAL}, writeRule("B", writeProductions({"'g'", "#"}))},
+                {{"C", Symbol::Type::NON_TERMINAL}, writeRule("B", writeProductions({"'h'", "#"}))}
         };
         Symbol first_symbol = {"S", Symbol::Type::NON_TERMINAL};
         Syntax_Utils utils_syntax(rules, first_symbol);
         std::vector<std::string> non_terminals = {"S", "A", "B", "C"};
-        std::vector<std::unordered_set<std::string>> firsts = {{"d", "g", "h", "Є", "b", "a"},
-                                                               {"d", "g", "h", "Є"},
-                                                               {"g", "Є"},
-                                                               {"h", "Є"}};
+        std::vector<std::unordered_set<std::string>> firsts = {{"d", "g", "h", "#", "b", "a"},
+                                                               {"d", "g", "h", "#"},
+                                                               {"g", "#"},
+                                                               {"h", "#"}};
 
         std::vector<std::unordered_set<std::string>> follows = {{"$"},
                                                                 {"g", "$", "h"},
