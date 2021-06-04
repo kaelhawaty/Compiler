@@ -52,7 +52,7 @@ private:
     void apply_left_factoring();
     std::unordered_map<Symbol, Rule> left_factor_rule(const Symbol &lhs,const Rule &rule);
     void addProduction(Node* node, const Production &production);
-    std::vector<Symbol> dfs(const std::unique_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules, const Symbol &origin_lhs);
+    std::vector<Symbol> dfs(Node* node, std::unordered_map<Symbol, Rule> &new_rules, const Symbol &origin_lhs);
     void reformat_production(Production &production);
 
 };

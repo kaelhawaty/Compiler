@@ -47,6 +47,7 @@ Rules_builder::Rules_builder(const std::string &inputFilePath) : has_error(false
 
 void Rules_builder::buildLL1Grammar() {
     eliminate_left_recursion();
+    apply_left_factoring();
 }
 
 void
@@ -147,11 +148,11 @@ std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &l
         // This a special case when the root contains one child.
         // We must add the first rule here from the return value from dfs call.
         new_rules.insert({lhs,{}});
-        Production new_production = dfs(root,new_rules,lhs);
+        Production new_production = dfs(root.get(),new_rules,lhs);
         reformat_production(new_production);
         new_rules[lhs] = {std::move(new_production)};
     }else{
-        dfs(root,new_rules,lhs);
+        dfs(root.get(),new_rules,lhs);
     }
     return new_rules;
 }
@@ -168,7 +169,7 @@ void Rules_builder::addProduction(Node* node, const Production &production) {
     node->children.insert({eps_symbol, std::make_unique<Node>()});
 }
 // dfs the whole trie and add a rule for every node with more than one child.
-std::vector<Symbol> Rules_builder::dfs(const std::unique_ptr<Node> &node, std::unordered_map<Symbol, Rule> &new_rules,
+std::vector<Symbol> Rules_builder::dfs(Node* node, std::unordered_map<Symbol, Rule> &new_rules,
                                        const Symbol &origin_lhs) {
     // base case when reaching leaf node.
     if(node->children.empty())
@@ -177,8 +178,9 @@ std::vector<Symbol> Rules_builder::dfs(const std::unique_ptr<Node> &node, std::u
     // if node has only one child no need to add new rule.
     // Just continue the dfs and the child to be a prefix to the returned value when reversed.
     if(node->children.size() == 1){
-        std::vector<Symbol> symbols = dfs(node->children.begin()->second,new_rules,origin_lhs);
-        symbols.push_back(node->children.begin()->first);
+        const auto& onlyChild = node->children.begin();
+        std::vector<Symbol> symbols = dfs(onlyChild->second.get(),new_rules,origin_lhs);
+        symbols.push_back(onlyChild->first);
         return symbols;
     }
 
@@ -193,7 +195,7 @@ std::vector<Symbol> Rules_builder::dfs(const std::unique_ptr<Node> &node, std::u
     Rule new_rule;
     for(const auto &[symbol,child]:node->children){
         // Get the rest of the production for this child.
-        Production new_production = dfs(child,new_rules,origin_lhs);
+        Production new_production = dfs(child.get(),new_rules,origin_lhs);
         // Add child symbol to be a prefix for the production when reversed.
         new_production.push_back(symbol);
         reformat_production(new_production);
