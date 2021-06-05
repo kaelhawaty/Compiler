@@ -16,6 +16,7 @@ public:
     const Production& getProduction(const Symbol &nonTerminal, const Symbol &terminal) const;
     bool hasProduction(const Symbol &nonTerminal, const Symbol &terminal) const;
     bool fail() const;
+    void writeToCSV(const std::string &fileName);
 
 private:
     std::unordered_map<Symbol,std::unordered_map<Symbol,Production>> table;
@@ -23,6 +24,8 @@ private:
 
     void addRowToTable(const Symbol &nonTerminal, const std::vector<Production> &productions,const Syntax_Utils &syntaxUtils);
     void addProductionToRow(const Symbol &nonTerminal, const Symbol &terminal, const Production &production);
+    void writeRowToCSV(const std::vector<std::string> &row, std::ofstream &tableFile);
+    std::string toString(const Production &production);
 };
 
 
