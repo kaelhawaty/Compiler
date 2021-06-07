@@ -147,10 +147,10 @@ std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &l
     if(root->children.size() == 1){
         // This a special case when the root contains one child.
         // We must add the first rule here from the return value from dfs call.
-        new_rules.insert({lhs,{}});
+        new_rules.insert({lhs,Rule(lhs.name)});
         Production new_production = dfs(root.get(),new_rules,lhs);
         reformat_production(new_production);
-        new_rules[lhs] = {std::move(new_production)};
+        new_rules[lhs] = Rule(lhs.name,{std::move(new_production)});
     }else{
         dfs(root.get(),new_rules,lhs);
     }
@@ -189,10 +189,10 @@ std::vector<Symbol> Rules_builder::dfs(Node* node, std::unordered_map<Symbol, Ru
     //The new Rule lhs is determined from the new_rules current size to have a unique lhs for each rule (A, A1, A2, ...)
     if(new_rules.size() >= 1)
         new_lhs.name += std::to_string(new_rules.size());
-    new_rules.insert({new_lhs,{}});
+    new_rules.insert({new_lhs,Rule(new_lhs.name)});
 
 
-    Rule new_rule;
+    Rule new_rule = Rule(new_lhs.name);
     for(const auto &[symbol,child]:node->children){
         // Get the rest of the production for this child.
         Production new_production = dfs(child.get(),new_rules,origin_lhs);
@@ -201,7 +201,7 @@ std::vector<Symbol> Rules_builder::dfs(Node* node, std::unordered_map<Symbol, Ru
         reformat_production(new_production);
         new_rule.emplace_back(std::move(new_production));
     }
-    new_rules[new_lhs] = std::move(new_rule);
+    new_rules[new_lhs] = Rule(new_lhs.name,std::move(new_rule));
     return {new_lhs};
 }
 

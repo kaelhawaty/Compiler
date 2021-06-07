@@ -44,4 +44,10 @@ static Rule writeRule(const std::string &lhs, const std::vector<Production> &pro
     return Rule(lhs, prod);
 }
 
+static bool isEqual(std::vector<Production> prod1, std::vector<Production> prod2) {
+    sort(prod1.begin(), prod1.end());
+    sort(prod2.begin(), prod2.end());
+    return prod1 == prod2;
+}
+
 #endif //COMPILER_SYNTAX_TESTS_HELPER_H
