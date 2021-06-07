@@ -45,8 +45,6 @@ using Production = std::vector<Symbol>;
 
 class Rule : public std::vector<Production> {
 public:
-    explicit Rule() = default;
-
     explicit Rule(std::string lhsName) {
         lhs = {std::move(lhsName), Symbol::Type::NON_TERMINAL};
     }
