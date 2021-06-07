@@ -71,4 +71,33 @@ namespace CFG_Reader_tests {
         ASSERT_TRUE(reader.getRules().at(A_dash)[1][0] == eps_symbol);
 
     }
+
+    TEST_F(Rules_builder_tests, testLeftFactoring){
+        // A --> bda | bdb | bc | bdbzz
+        //------------------------------
+        // A  --> b A1
+        // A1 --> d A2 | c
+        // A2 --> b A3 | a
+        // A3 --> zz | #
+
+        writeRules("# A = 'b' 'd' 'a' | 'b' 'd' 'b' | 'b' 'c' | 'b' 'd' 'b' 'z' 'z'");
+
+        std::unordered_map<Symbol,Rule> expected_rules;
+        expected_rules[{"A",Symbol::Type ::NON_TERMINAL}] =
+            writeRule("A", writeProductions({"'b' A1"}));
+        expected_rules[{"A1",Symbol::Type ::NON_TERMINAL}] =
+                writeRule("A1", writeProductions({"'d' A2","'c'"}));
+        expected_rules[{"A2",Symbol::Type ::NON_TERMINAL}] =
+                writeRule("A2", writeProductions({"'b' A3","'a'"}));
+        expected_rules[{"A3",Symbol::Type ::NON_TERMINAL}] =
+                writeRule("A3", writeProductions({"'z' 'z'",eps_symbol.name}));
+
+        Rules_builder reader(tempCFGRulesFilePath);
+        reader.buildLL1Grammar();
+        ASSERT_TRUE(reader.getRules().size() == 4);
+        ASSERT_TRUE(reader.getStartSymbol().name == "A");
+        for(const auto& [lhs,productions] : expected_rules){
+            EXPECT_TRUE(isEqual(reader.getRules().at(lhs),productions));
+        }
+    }
 }

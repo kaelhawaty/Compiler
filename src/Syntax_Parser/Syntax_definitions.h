@@ -19,6 +19,12 @@ struct Symbol {
     inline bool operator==(const Symbol &a) const {
         return name == a.name && type == a.type;
     }
+
+    inline bool operator<(const Symbol &a) const {
+        if(type != a.type)
+            return type < a.type;
+        return name < a.name;
+    }
 };
 namespace std
 {
@@ -39,6 +45,8 @@ using Production = std::vector<Symbol>;
 
 class Rule : public std::vector<Production> {
 public:
+    explicit Rule() = default;
+
     explicit Rule(std::string lhsName) {
         lhs = {std::move(lhsName), Symbol::Type::NON_TERMINAL};
     }
