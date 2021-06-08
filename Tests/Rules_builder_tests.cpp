@@ -53,23 +53,24 @@ namespace CFG_Reader_tests {
     }
 
     TEST_F(Rules_builder_tests, testSimpleLeftRecursion) {
-        writeRules("# A = A a | B");
-        // A --> A a | B
+        writeRules("# A = A 'a' | B");
+        // A --> A 'a' | B
         // --------------
         // A --> B A'
-        // A' --> a A' | E
+        // A' --> 'a' A' | E
         Rules_builder reader(tempCFGRulesFilePath);
         reader.buildLL1Grammar();
         ASSERT_TRUE(reader.getRules().size() == 2);
         ASSERT_TRUE(reader.getStartSymbol().name == "A");
-        Production expected_A = writeSymbols({"B", "A'"});
-        Production expected_A_dash = writeSymbols({"a", "A'"});
-        Symbol A_dash = {reader.getStartSymbol().name+"\'", Symbol::Type::NON_TERMINAL};
-        ASSERT_TRUE(reader.getRules().at(reader.getStartSymbol()).size() == 1 && reader.getRules().at(A_dash).size() == 2);
-        ASSERT_TRUE(reader.getRules().at(reader.getStartSymbol())[0] == expected_A);
-        ASSERT_TRUE(reader.getRules().at(A_dash)[0] == expected_A_dash);
-        ASSERT_TRUE(reader.getRules().at(A_dash)[1][0] == eps_symbol);
+        auto expected_A = writeProductions({"B A'"});
+        auto expected_A_dash = writeProductions({"'a' A'", "#"});
 
+        auto rules = reader.getRules();
+        auto start_symbol = reader.getStartSymbol();
+        Symbol A_dash = {reader.getStartSymbol().name+"\'", Symbol::Type::NON_TERMINAL};
+
+        ASSERT_TRUE(isEqual(rules.at(start_symbol), expected_A));
+        ASSERT_TRUE(isEqual(rules.at(A_dash), expected_A_dash));
     }
 
     TEST_F(Rules_builder_tests, testLeftFactoring){
@@ -83,14 +84,14 @@ namespace CFG_Reader_tests {
         writeRules("# A = 'b' 'd' 'a' | 'b' 'd' 'b' | 'b' 'c' | 'b' 'd' 'b' 'z' 'z'");
 
         std::unordered_map<Symbol,Rule> expected_rules;
-        expected_rules[{"A",Symbol::Type ::NON_TERMINAL}] =
-            writeRule("A", writeProductions({"'b' A1"}));
-        expected_rules[{"A1",Symbol::Type ::NON_TERMINAL}] =
-                writeRule("A1", writeProductions({"'d' A2","'c'"}));
-        expected_rules[{"A2",Symbol::Type ::NON_TERMINAL}] =
-                writeRule("A2", writeProductions({"'b' A3","'a'"}));
-        expected_rules[{"A3",Symbol::Type ::NON_TERMINAL}] =
-                writeRule("A3", writeProductions({"'z' 'z'",eps_symbol.name}));
+        expected_rules.insert({{"A", Symbol::Type::NON_TERMINAL},
+                               writeRule("A", writeProductions({"'b' A1"}))});
+        expected_rules.insert({{"A1", Symbol::Type::NON_TERMINAL},
+                               writeRule("A1", writeProductions({"'d' A2", "'c'"}))});
+        expected_rules.insert({{"A2", Symbol::Type::NON_TERMINAL},
+                               writeRule("A2", writeProductions({"'b' A3", "'a'"}))});
+        expected_rules.insert({{"A3", Symbol::Type::NON_TERMINAL},
+                               writeRule("A3", writeProductions({"'z' 'z'", eps_symbol.name}))});
 
         Rules_builder reader(tempCFGRulesFilePath);
         reader.buildLL1Grammar();

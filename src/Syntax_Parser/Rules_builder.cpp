@@ -150,7 +150,7 @@ std::unordered_map<Symbol, Rule> Rules_builder::left_factor_rule(const Symbol &l
         new_rules.insert({lhs,Rule(lhs.name)});
         Production new_production = dfs(root.get(),new_rules,lhs);
         reformat_production(new_production);
-        new_rules[lhs] = Rule(lhs.name,{std::move(new_production)});
+        new_rules.at(lhs) = Rule(lhs.name,{std::move(new_production)});
     }else{
         dfs(root.get(),new_rules,lhs);
     }
@@ -201,7 +201,7 @@ std::vector<Symbol> Rules_builder::dfs(Node* node, std::unordered_map<Symbol, Ru
         reformat_production(new_production);
         new_rule.emplace_back(std::move(new_production));
     }
-    new_rules[new_lhs] = Rule(new_lhs.name,std::move(new_rule));
+    new_rules.at(new_lhs) = Rule(new_lhs.name,std::move(new_rule));
     return {new_lhs};
 }
 

@@ -83,9 +83,8 @@ Syntax_parser::parse(LexicalParser &parser) const {
     Status status = Status::ACCEPTED;
 
     auto store_derivation = [&]() {
-        // Push derivation
+        derivation.push_back(matched_terminals);
         if (stk.size() > 1) {
-            derivation.push_back(matched_terminals);
             derivation.back().insert(derivation.back().end(), stk.rbegin(), std::prev(stk.rend()));
         }
     };
@@ -108,6 +107,7 @@ Syntax_parser::parse(LexicalParser &parser) const {
                     tokenizer.next_token();
                 } else {
                     std::cerr << "Error: missing " << cur_sym.name << ", inserted.\n";
+                    matched_terminals.push_back(cur_sym);
                     status = Status::ACCEPTED_WITH_ERRORS;
                 }
                 break;
@@ -115,9 +115,10 @@ Syntax_parser::parse(LexicalParser &parser) const {
                 // Pops non-terminal from the stack and pushes the matched production
                 // in reverse order to the stack.
             case Behavior::ENTRY_EXISTS: {
-                stk.pop_back();
                 const Production &prod = table->getProduction(cur_sym, token_sym);
+                stk.pop_back();
                 std::for_each(prod.rbegin(), prod.rend(), [&](const Symbol &symbol) {
+                    if(symbol == eps_symbol) return;
                     stk.push_back(symbol);
                 });
                 store_derivation();
