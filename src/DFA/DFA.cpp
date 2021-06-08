@@ -11,7 +11,7 @@ const std::vector<DFA::State> &DFA::getStates() const {
 DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
     std::queue<NFA::Set> unmarked_states;
     // Maps a given set of NFA nodes to its corresponding DFA state ID.
-    std::map<NFA::Set, int> visited;
+    std::unordered_map<NFA::Set, int> visited;
     // Set of all starting NFA nodes.
     NFA::Set start;
     for (const auto &regEXP : regEXPs) {
@@ -29,12 +29,13 @@ DFA::DFA(const std::vector<RegularExpression> &regEXPs) {
         set_if_accepting_state(states[index], current, regEXPs);
         for (char c = 1; c < CHAR_MAX; ++c) {// start from 1 since 0 is reserved for EPSILON.
             NFA::Set next = E_closure(Move(current, c));
-            if (!visited.count(next)) {
-                visited.insert({next, state_id});
+            auto it = visited.find(next);
+            if (it == visited.end()) {
+                it = visited.insert({next,state_id}).first;
+                unmarked_states.emplace(std::move(next));
                 states.emplace_back(state_id++);
-                unmarked_states.push(next);
             }
-            states[index].transitions[c] = visited.at(next);
+            states[index].transitions[c] = it->second;
         }
     }
     int empty_set_index = visited.at(NFA::Set());
