@@ -50,26 +50,31 @@ namespace NFA_test {
 
     TEST(NFA_test, SingleChar) {
         NFA nfa('a');
-        auto nodeA = std::make_shared<NFA::Node>();
-        auto nodeB = std::make_shared<NFA::Node>();
-        nodeA->addTransition('a', nodeB);
-        NFA temp{nodeA, nodeB};
+        std::vector<std::unique_ptr<NFA::Node>> nodes;
+        nodes.emplace_back(std::make_unique<NFA::Node>());
+        auto start = nodes.back().get();
+        nodes.emplace_back(std::make_unique<NFA::Node>());
+        auto end = nodes.back().get();
+        start->addTransition('a', end);
+
+        NFA temp{start, end, std::move(nodes)};
         EXPECT_TRUE(areEqual(nfa, temp));
     }
 
     TEST(NFA_test, NFACopy) {
-        std::array<std::shared_ptr<NFA::Node>, 1000> arr;
-        for (auto &i : arr) {
-            i = std::make_shared<NFA::Node>();
+        std::vector<std::unique_ptr<NFA::Node>> nodes;
+        for (int i = 0; i < 1000; i++) {
+            nodes.emplace_back(std::make_unique<NFA::Node>());
         }
         char c = 'a';
-        for (int i = 0; i < arr.size(); i++) {
-            for (int j = 0; j < arr.size(); j++) {
-                arr[i]->addTransition(c, arr[j]);
+        for (int i = 0; i < nodes.size(); i++) {
+            for (int j = 0; j < nodes.size(); j++) {
+                nodes[i]->addTransition(c, nodes[j].get());
             }
         }
 
-        NFA temp{arr[0], arr.back()};
+        auto start = nodes[0].get(), end = nodes.back().get();
+        NFA temp{start, end, std::move(nodes)};
         NFA cpy{temp};
         EXPECT_TRUE(areEqual(temp, cpy));
     }
@@ -77,16 +82,17 @@ namespace NFA_test {
     TEST(NFA_test, Concatenate) {
         NFA res = NFA_Builder(NFA{'a'}).Concatenate('b').build();
         // res = * a * e * b *
-        std::vector<std::shared_ptr<NFA::Node>> arrNodes(4);
-        for (auto &arrNode : arrNodes) {
-            arrNode = std::make_shared<NFA::Node>();
+        std::vector<std::unique_ptr<NFA::Node>> nodes(4);
+        for (auto &arrNode : nodes) {
+            arrNode = std::make_unique<NFA::Node>();
         }
 
         std::vector<char> transitions{'a', EPSILON, 'b'};
-        for (int i = 0; i < arrNodes.size() - 1; i++) {
-            arrNodes[i]->addTransition(transitions[i], arrNodes[i + 1]);
+        for (int i = 0; i < nodes.size() - 1; i++) {
+            nodes[i]->addTransition(transitions[i], nodes[i + 1].get());
         }
-        NFA temp{arrNodes[0], arrNodes.back()};
+        auto start = nodes[0].get(), end = nodes.back().get();
+        NFA temp{start, end, std::move(nodes)};
         EXPECT_TRUE(areEqual(temp, res));
     }
 
@@ -96,21 +102,23 @@ namespace NFA_test {
          *  *           *
          *    e * b * e
          */
-        std::vector<std::shared_ptr<NFA::Node>> arrNodes(6);
-        for (auto &arrNode : arrNodes) {
-            arrNode = std::make_shared<NFA::Node>();
+        std::vector<std::unique_ptr<NFA::Node>> nodes(6);
+        for (auto &arrNode : nodes) {
+            arrNode = std::make_unique<NFA::Node>();
         }
         /*    e 1 a 2 e
          *  0           5
          *    e 3 b 4 e
          */
-        arrNodes[0]->addTransition(EPSILON, arrNodes[1]);
-        arrNodes[0]->addTransition(EPSILON, arrNodes[3]);
-        arrNodes[1]->addTransition('a', arrNodes[2]);
-        arrNodes[2]->addTransition(EPSILON, arrNodes[5]);
-        arrNodes[3]->addTransition('b', arrNodes[4]);
-        arrNodes[4]->addTransition(EPSILON, arrNodes[5]);
-        NFA temp(arrNodes[0], arrNodes.back());
+        nodes[0]->addTransition(EPSILON, nodes[1].get());
+        nodes[0]->addTransition(EPSILON, nodes[3].get());
+        nodes[1]->addTransition('a', nodes[2].get());
+        nodes[2]->addTransition(EPSILON, nodes[5].get());
+        nodes[3]->addTransition('b', nodes[4].get());
+        nodes[4]->addTransition(EPSILON, nodes[5].get());
+
+        auto start = nodes[0].get(), end = nodes.back().get();
+        NFA temp(start, end, std::move(nodes));
         EXPECT_TRUE(areEqual(temp, res));
     }
 
@@ -120,19 +128,21 @@ namespace NFA_test {
          *      /   \
          *  * e * a * e *
          */
-        std::vector<std::shared_ptr<NFA::Node>> arrNodes(4);
-        for (auto &arrNode : arrNodes) {
-            arrNode = std::make_shared<NFA::Node>();
+        std::vector<std::unique_ptr<NFA::Node>> nodes(4);
+        for (auto &arrNode : nodes) {
+            arrNode = std::make_unique<NFA::Node>();
         }
         /*        e
          *      /   \
          *  0 e 1 a 2 e 3
          */
-        arrNodes[0]->addTransition(EPSILON, arrNodes[1]);
-        arrNodes[1]->addTransition('a', arrNodes[2]);
-        arrNodes[2]->addTransition(EPSILON, arrNodes[3]);
-        arrNodes[2]->addTransition(EPSILON, arrNodes[1]);
-        NFA temp{arrNodes[0], arrNodes.back()};
+        nodes[0]->addTransition(EPSILON, nodes[1].get());
+        nodes[1]->addTransition('a', nodes[2].get());
+        nodes[2]->addTransition(EPSILON, nodes[3].get());
+        nodes[2]->addTransition(EPSILON, nodes[1].get());
+
+        auto start = nodes[0].get(), end = nodes.back().get();
+        NFA temp{start, end, std::move(nodes)};
         EXPECT_TRUE(areEqual(temp, res));
     }
 
@@ -143,22 +153,24 @@ namespace NFA_test {
          *   /  /   \   \
          *  * e * a * e *
          */
-        std::vector<std::shared_ptr<NFA::Node>> arrNodes(4);
-        for (auto &arrNode : arrNodes) {
-            arrNode = std::make_shared<NFA::Node>();
+        std::vector<std::unique_ptr<NFA::Node>> nodes(4);
+        for (auto &arrNode : nodes) {
+            arrNode = std::make_unique<NFA::Node>();
         }
         /*        e
          *    /   e   \
          *   /  /   \  \
          *  0 e 1 a 2 e 3
          */
-        arrNodes[0]->addTransition(EPSILON, arrNodes[1]);
-        arrNodes[1]->addTransition('a', arrNodes[2]);
-        arrNodes[2]->addTransition(EPSILON, arrNodes[3]);
-        arrNodes[2]->addTransition(EPSILON, arrNodes[1]);
+        nodes[0]->addTransition(EPSILON, nodes[1].get());
+        nodes[1]->addTransition('a', nodes[2].get());
+        nodes[2]->addTransition(EPSILON, nodes[3].get());
+        nodes[2]->addTransition(EPSILON, nodes[1].get());
         // Only difference between Positive_closure and Kleene_closure.
-        arrNodes[0]->addTransition(EPSILON, arrNodes[3]);
-        NFA temp{arrNodes[0], arrNodes.back()};
+        nodes[0]->addTransition(EPSILON, nodes[3].get());
+
+        auto start = nodes[0].get(), end = nodes.back().get();
+        NFA temp{start, end, std::move(nodes)};
         EXPECT_TRUE(areEqual(temp, res));
     }
 

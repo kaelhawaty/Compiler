@@ -13,8 +13,10 @@ NFA_Builder::NFA_Builder(const NFA &nfa) : nfa(nfa) {
 }
 
 NFA_Builder &NFA_Builder::Concatenate(NFA rhs) {
-    nfa.end->addTransition(EPSILON, std::move(rhs.start));
-    nfa.end = std::move(rhs.end);
+    nfa.end->addTransition(EPSILON, rhs.start);
+    nfa.end = rhs.end;
+    nfa.nodes.insert(nfa.nodes.end(), std::make_move_iterator(rhs.nodes.begin()),
+              std::make_move_iterator(rhs.nodes.end()));
     return *this;
 }
 
@@ -23,15 +25,19 @@ NFA_Builder &NFA_Builder::Concatenate(const char c) {
 }
 
 NFA_Builder &NFA_Builder::Or(NFA rhs) {
-    auto new_start{std::make_shared<NFA::Node>()};
-    auto new_end{std::make_shared<NFA::Node>()};
+    nfa.nodes.push_back(std::make_unique<NFA::Node>());
+    auto new_start = nfa.nodes.back().get();
+    nfa.nodes.push_back(std::make_unique<NFA::Node>());
+    auto new_end = nfa.nodes.back().get();
 
-    new_start->addTransition(EPSILON, std::move(nfa.start));
-    new_start->addTransition(EPSILON, std::move(rhs.start));
+    new_start->addTransition(EPSILON, nfa.start);
+    new_start->addTransition(EPSILON, rhs.start);
     nfa.end->addTransition(EPSILON, new_end);
     rhs.end->addTransition(EPSILON, new_end);
-    nfa.start = std::move(new_start);
-    nfa.end = std::move(new_end);
+    nfa.start = new_start;
+    nfa.end = new_end;
+    nfa.nodes.insert(nfa.nodes.end(), std::make_move_iterator(rhs.nodes.begin()),
+                     std::make_move_iterator(rhs.nodes.end()));
     return *this;
 }
 
@@ -40,14 +46,16 @@ NFA_Builder &NFA_Builder::Or(const char c) {
 }
 
 NFA_Builder &NFA_Builder::Positive_closure() {
-    auto new_start{std::make_shared<NFA::Node>()};
-    auto new_end{std::make_shared<NFA::Node>()};
+    nfa.nodes.push_back(std::make_unique<NFA::Node>());
+    auto new_start = nfa.nodes.back().get();
+    nfa.nodes.push_back(std::make_unique<NFA::Node>());
+    auto new_end = nfa.nodes.back().get();
 
     nfa.end->addTransition(EPSILON, nfa.start);
-    new_start->addTransition(EPSILON, std::move(nfa.start));
+    new_start->addTransition(EPSILON, nfa.start);
     nfa.end->addTransition(EPSILON, new_end);
-    nfa.start = std::move(new_start);
-    nfa.end = std::move(new_end);
+    nfa.start = new_start;
+    nfa.end = new_end;
     return *this;
 }
 

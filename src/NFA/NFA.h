@@ -35,7 +35,7 @@ public:
      * Constructs an NFA given the start and ending pointers of the NFA.
      * Note that the end state is considered to be the accepting state.
      */
-    explicit NFA(std::shared_ptr<Node> start, std::shared_ptr<Node> end);
+    explicit NFA(Node* start, Node* end, std::vector<std::unique_ptr<Node>> nodes);
 
     NFA(const NFA &cpy);
 
@@ -53,14 +53,14 @@ public:
 
     class Node {
     public:
-        using Transitions = std::unordered_map<char, std::vector<std::shared_ptr<Node>>>;
+        using Transitions = std::unordered_map<char, std::vector<Node*>>;
         static int UNIQUE_ID;
 
         Node();
 
         int get_id() const;
 
-        void addTransition(char c, std::shared_ptr<Node> ptr);
+        void addTransition(char c, Node* ptr);
 
         friend class NFA;
 
@@ -78,18 +78,19 @@ public:
     friend class NFA_Builder;
 
     const Node *get_start() const {
-        return start.get();
+        return start;
     }
 
     const Node *get_end() const {
-        return end.get();
+        return end;
     }
 
 private:
     // Start and end states of the automata respectively. Note that
     // the end state is considered to be the accepting state,
     // as any NFA has a single accepting state.
-    std::shared_ptr<Node> start, end;
+    Node *start, *end;
+    std::vector<std::unique_ptr<Node>> nodes;
 
 };
 
